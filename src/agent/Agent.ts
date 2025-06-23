@@ -186,25 +186,29 @@ export class Agent {
       }
     );
 
-    const choiseNode = this.graph.createNode("choiseNode", async (state) => {
-      const choises: Record<string, number> = {};
-      ACTORS.forEach((actor) => {
-        choises[actor.name] = 0;
-      });
-      CRITICS.forEach((critic) => {
-        const criticModel = this.graph.models[critic.name] as OpenAICritic;
-        const choise = criticModel.result?.choice;
-        if (choise) choises[choise]++;
-      });
-      const maxChoise = Math.max(...Object.values(choises));
-      const chosenActor = Object.keys(choises).find(
-        (name) => choises[name] === maxChoise
-      )!;
-      if (maxChoise < MIN_CHOISES) return { choise: null };
-      return {
-        choise: state.actorResponses[chosenActor],
-      };
-    });
+    const choiseNode = this.graph.createNode(
+      "choiseNode",
+      async (state, models) => {
+        const choises: Record<string, number> = {};
+        ACTORS.forEach((actor) => {
+          choises[actor.name] = 0;
+        });
+        CRITICS.forEach((critic) => {
+          const criticModel = this.graph.models[critic.name] as OpenAICritic;
+          const choise = criticModel.result?.choice;
+          if (choise) choises[choise]++;
+        });
+        const maxChoise = Math.max(...Object.values(choises));
+        const chosenActor = Object.keys(choises).find(
+          (name) => choises[name] === maxChoise
+        )!;
+        if (maxChoise < MIN_CHOISES) return { choise: null };
+        console.log("info", state, models);
+        return {
+          choise: state.actorResponses[chosenActor],
+        };
+      }
+    );
 
     const regenerationNode = this.graph.createNode(
       "regenerationNode",
