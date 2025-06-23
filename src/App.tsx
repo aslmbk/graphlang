@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
+import { Agent } from "./agent/Agent";
+
+const agent = new Agent();
 
 export const App = () => {
   const [prompt, setPrompt] = useState("");
 
   const handleSubmit = () => {
     if (prompt.trim()) {
-      console.log("Отправка промпта:", prompt);
+      console.log("Отправка промпта:", prompt, agent);
       // Здесь будет логика отправки промпта к ИИ
       setPrompt("");
     }

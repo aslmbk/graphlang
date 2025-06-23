@@ -1,7 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { Model } from "../graph/Model";
 import { MODELS } from "./types";
-import { AIMessageChunk } from "@langchain/core/messages";
 
 type OpenAIModelParams = {
   name: string;
@@ -21,8 +20,8 @@ export class OpenAIModel extends Model {
     });
   }
 
-  public async call(prompt: string): Promise<AIMessageChunk> {
-    return this.model.invoke(prompt);
+  public async call(prompt: string) {
+    return await this.model.invoke(prompt);
   }
 
   public get error() {

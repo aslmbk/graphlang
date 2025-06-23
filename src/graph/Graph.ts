@@ -6,42 +6,41 @@ import {
   StateGraph,
   type StateDefinition,
   type AnnotationRoot,
-  type StateType,
 } from "@langchain/langgraph";
 import { v4 as uuidv4 } from "uuid";
 
-type NodeCallback<S extends StateDefinition> = (
-  state: StateType<S>,
+type NodeCallback<S> = (
+  state: S,
   models: Record<string, Model>
-) => Partial<StateType<S>>;
+) => Promise<Partial<S>>;
 
 type EdgeParams = {
   from: string | Node;
   to: string | Node;
 };
 
-type EdgeCondition<S extends StateDefinition> = {
+type EdgeCondition<S> = {
   to: string | Node;
-  condition: (state: StateType<S>) => boolean;
+  condition: (state: S) => boolean;
 };
 
-type ConditionalEdgeParams<S extends StateDefinition> = {
+type ConditionalEdgeParams<S> = {
   from: string | Node;
   to: EdgeCondition<S>[];
   defaultTo: string | Node;
 };
 
-export class Graph<GraphStateType extends AnnotationRoot<StateDefinition>> {
+export class Graph<GraphStateType extends AnnotationRoot<any>> {
   public static readonly START_EDGE = START;
   public static readonly END_EDGE = END;
 
-  public workflow: StateGraph<StateDefinition>;
+  private workflow: StateGraph<StateDefinition>;
 
   private _models: Map<string, Model> = new Map();
   private _nodes: Map<string, Node> = new Map();
 
   constructor(state: GraphStateType) {
-    this.workflow = new StateGraph(state as unknown as StateDefinition);
+    this.workflow = new StateGraph(state);
   }
 
   public addModel(model: Model) {
@@ -52,17 +51,18 @@ export class Graph<GraphStateType extends AnnotationRoot<StateDefinition>> {
     return Object.fromEntries(this._models);
   }
 
+  public compile() {
+    return this.workflow.compile();
+  }
+
   public createNode(
     name: string,
     callback: NodeCallback<GraphStateType["State"]>
   ) {
     const node = new Node(name);
     this._nodes.set(node.name, node);
-    this.workflow.addNode(node.name, (state) => {
-      const newState = callback(
-        state as StateType<GraphStateType["State"]>,
-        this.models
-      );
+    this.workflow.addNode(node.name, async (state) => {
+      const newState = await callback(state, this.models);
       return {
         ...state,
         ...newState,

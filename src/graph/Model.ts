@@ -1,4 +1,5 @@
 import { Runnable } from "@langchain/core/runnables";
+import { BaseMessage } from "@langchain/core/messages";
 import { v4 as uuidv4 } from "uuid";
 
 export abstract class Model {
@@ -10,7 +11,7 @@ export abstract class Model {
     this.name = params.name;
   }
 
-  public abstract call(prompt: string): unknown;
+  public abstract call(prompt: string): Promise<BaseMessage>;
 
   public abstract get error(): boolean;
 }
