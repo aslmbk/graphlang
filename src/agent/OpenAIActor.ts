@@ -25,8 +25,7 @@ export class OpenAIActor extends Model {
     this.model = new ChatOpenAI({
       model: params.model,
       temperature: params.temperature,
-      openAIApiKey:
-        "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",
+      openAIApiKey: import.meta.env.VITE_OPENAI_API_KEY,
     });
   }
 
