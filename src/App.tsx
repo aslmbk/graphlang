@@ -7,11 +7,23 @@ const agent = new Agent();
 
 export const App = () => {
   const [prompt, setPrompt] = useState("");
+  const [response, setResponse] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = () => {
     if (prompt.trim()) {
-      console.log("Отправка промпта:", prompt, agent);
-      // Здесь будет логика отправки промпта к ИИ
+      setIsLoading(true);
+      agent
+        .invoke(prompt)
+        .then((response) => {
+          setResponse(response.choise);
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          setResponse("Error бах цо");
+          setIsLoading(false);
+        });
       setPrompt("");
     }
   };
@@ -61,7 +73,7 @@ export const App = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
               onClick={handleSubmit}
-              disabled={!prompt.trim()}
+              disabled={!prompt.trim() || isLoading}
               className="flex-1 h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <svg
@@ -78,17 +90,80 @@ export const App = () => {
                   d="M13 10V3L4 14h7v7l9-11h-7z"
                 />
               </svg>
-              Д1атоха
+              {isLoading ? "Д1атухуш..." : "Д1атоха"}
             </Button>
 
             <Button
               variant="outline"
               onClick={() => setPrompt("")}
+              disabled={isLoading}
               className="h-12 px-6 border-2 hover:bg-destructive/10 hover:border-destructive/50 transition-all duration-200"
             >
               Горгам хьакха
             </Button>
           </div>
+
+          {/* Блок ответа */}
+          {isLoading && (
+            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-blue-700 dark:text-blue-300">
+                  Жоьпалле озина...
+                </span>
+              </div>
+            </div>
+          )}
+
+          {response && !isLoading && (
+            <div className="mt-6 p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="w-6 h-6 text-green-600 dark:text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3 flex-1">
+                  <h3 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
+                    Жоп
+                  </h3>
+                  <div className="text-sm text-green-700 dark:text-green-300 whitespace-pre-wrap">
+                    {response}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setResponse(null)}
+                  className="ml-3 flex-shrink-0 text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Дополнительная информация */}
           <div className="mt-6 pt-6 border-t border-border/30">

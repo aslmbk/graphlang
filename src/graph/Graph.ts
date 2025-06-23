@@ -6,7 +6,7 @@ import {
   StateGraph,
   type StateDefinition,
   type AnnotationRoot,
-} from "@langchain/langgraph";
+} from "@langchain/langgraph/web";
 import { v4 as uuidv4 } from "uuid";
 
 type NodeCallback<S> = (
@@ -14,20 +14,20 @@ type NodeCallback<S> = (
   models: Record<string, Model>
 ) => Promise<Partial<S>>;
 
-type EdgeParams = {
-  from: string | Node;
-  to: string | Node;
-};
+type EdgeNode = string | Node;
 
-type EdgeCondition<S> = {
-  to: string | Node;
-  condition: (state: S) => boolean;
+type EdgeParams = {
+  from: EdgeNode;
+  to: EdgeNode;
 };
 
 type ConditionalEdgeParams<S> = {
-  from: string | Node;
-  to: EdgeCondition<S>[];
-  defaultTo: string | Node;
+  from: EdgeNode;
+  to: {
+    to: EdgeNode;
+    condition: (state: S) => boolean;
+  }[];
+  defaultTo: EdgeNode;
 };
 
 export class Graph<GraphStateType extends AnnotationRoot<any>> {
