@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Agent } from "./agent/Agent";
+import { AgentConfig } from "./components/AgentConfig";
+import type { AgentConfig as AgentConfigType } from "./lib/types";
+import { loadConfig } from "./lib/config";
 
 const agent = new Agent();
 
@@ -9,6 +12,15 @@ export const App = () => {
   const [prompt, setPrompt] = useState("");
   const [response, setResponse] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [config, setConfig] = useState<AgentConfigType>(loadConfig());
+
+  // Применяем конфигурацию к агенту
+  useEffect(() => {
+    agent.setMaxGenerationAttempts(config.maxGenerationAttempts);
+    agent.setChoiseThreshold(config.choiseThreshold);
+    agent.setActorModels(config.actorModels);
+    agent.setCriticModels(config.criticModels);
+  }, [config]);
 
   const handleSubmit = () => {
     if (prompt.trim()) {
@@ -50,6 +62,11 @@ export const App = () => {
 
         {/* Основная карточка */}
         <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl shadow-2xl p-8">
+          {/* Кнопка настроек */}
+          <div className="flex justify-end mb-6">
+            <AgentConfig onConfigChange={setConfig} />
+          </div>
+
           {/* Поле ввода */}
           <div className="mb-6">
             <label
