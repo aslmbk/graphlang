@@ -66,7 +66,6 @@ Cons for modelName2: There is extra variables that can be bypassed."`);
     this._error = false;
     try {
       const response = await this.model.invoke([systemMessage, prompt]);
-      console.log("critic response", response, this.model);
       for (const tool_call of response.tool_calls) {
         for (const tool of this.tools) {
           if (tool_call.name === tool.name) {

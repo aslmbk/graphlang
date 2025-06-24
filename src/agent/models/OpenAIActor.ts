@@ -30,7 +30,6 @@ export class OpenAIActor extends Model {
     this._error = false;
     try {
       const response = await this.model.invoke(promptMessages);
-      console.log("actor response", response);
       this.history.push(humanMessage, response);
       return response;
     } catch (error) {

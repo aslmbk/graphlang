@@ -3,7 +3,7 @@ import { Graph } from "../graph/Graph";
 import { Annotation, type CompiledGraph } from "@langchain/langgraph/web";
 import { OpenAIActor } from "./models/OpenAIActor";
 import { OpenAICritic } from "./models/OpenAICritic";
-import { getChatModel, MODELS } from "./models/models";
+import { getChatModel } from "./models/models";
 
 const StateAnnotation = Annotation.Root({
   actorResponses: Annotation<Record<string, string>>({
@@ -36,59 +36,23 @@ const StateAnnotation = Annotation.Root({
   }),
 });
 
-const ACTORS = [
-  {
-    name: "actor1",
-    model: MODELS.xai.grok_3,
-    temperature: 0.2,
-  },
-  {
-    name: "actor2",
-    model: MODELS.xai.grok_3,
-    temperature: 0.5,
-  },
-];
-
-const CRITICS = [
-  {
-    name: "critic1",
-    model: MODELS.deepseek.deepseek_r1_0528,
-    temperature: 0.2,
-  },
-  {
-    name: "critic2",
-    model: MODELS.deepseek.deepseek_r1_0528,
-    temperature: 0.5,
-  },
-];
-
-const MAX_ATTEMPTS = 3;
-const MIN_CHOISES = 2;
+type ModelType = {
+  name: string;
+  model: string;
+  temperature: number;
+};
 
 export class Agent {
   private graph: Graph<typeof StateAnnotation>;
   private compiledGraph: CompiledGraph<any>;
 
+  private choiseThreshold: number = 51;
+  private maxGenerationAttempts: number = 3;
+  private actorModels: ModelType[] = [];
+  private criticModels: ModelType[] = [];
+
   constructor() {
     this.graph = new Graph(StateAnnotation);
-
-    ACTORS.forEach((act) => {
-      const model = getChatModel(act.model, act.temperature);
-      const actor = new OpenAIActor({
-        name: act.name,
-        model,
-      });
-      this.graph.addModel(actor);
-    });
-
-    CRITICS.forEach((crit) => {
-      const model = getChatModel(crit.model, crit.temperature);
-      const critic = new OpenAICritic({
-        name: crit.name,
-        model: model,
-      });
-      this.graph.addModel(critic);
-    });
 
     const actorsNode = this.graph.createNode(
       "actorsNode",
@@ -96,13 +60,13 @@ export class Agent {
         const actorResponses = { ...state.actorResponses };
 
         const responses = await Promise.allSettled(
-          ACTORS.map(async (actor) => {
+          this.actorModels.map(async (actor) => {
             const model = models[actor.name] as OpenAIActor;
             let answer: any;
             if (state.regeneration) {
               const pros: string[] = [];
               const cons: string[] = [];
-              CRITICS.forEach((critic) => {
+              this.criticModels.forEach((critic) => {
                 const criticResult = (
                   this.graph.models[critic.name] as OpenAICritic
                 ).result;
@@ -156,7 +120,7 @@ export class Agent {
         );
 
         const responses = await Promise.allSettled(
-          CRITICS.map(async (critic) => {
+          this.criticModels.map(async (critic) => {
             const model = models[critic.name] as OpenAICritic;
             const answer = await model.generateResponse(
               state.prompt,
@@ -183,29 +147,26 @@ export class Agent {
       }
     );
 
-    const choiseNode = this.graph.createNode(
-      "choiseNode",
-      async (state, models) => {
-        const choises: Record<string, number> = {};
-        ACTORS.forEach((actor) => {
-          choises[actor.name] = 0;
-        });
-        CRITICS.forEach((critic) => {
-          const criticModel = this.graph.models[critic.name] as OpenAICritic;
-          const choise = criticModel.result?.choice;
-          if (choise) choises[choise]++;
-        });
-        const maxChoise = Math.max(...Object.values(choises));
-        const chosenActor = Object.keys(choises).find(
-          (name) => choises[name] === maxChoise
-        )!;
-        if (maxChoise < MIN_CHOISES) return { choise: null };
-        console.log("info", state, models);
-        return {
-          choise: state.actorResponses[chosenActor],
-        };
-      }
-    );
+    const choiseNode = this.graph.createNode("choiseNode", async (state) => {
+      const choises: Record<string, number> = {};
+      this.actorModels.forEach((actor) => {
+        choises[actor.name] = 0;
+      });
+      this.criticModels.forEach((critic) => {
+        const criticModel = this.graph.models[critic.name] as OpenAICritic;
+        const choise = criticModel.result?.choice;
+        if (choise) choises[choise]++;
+      });
+      const maxChoise = Math.max(...Object.values(choises));
+      const maxChoiseInPercent = (maxChoise / this.criticModels.length) * 100;
+      if (maxChoiseInPercent < this.choiseThreshold) return { choise: null };
+      const chosenActor = Object.keys(choises).find(
+        (name) => choises[name] === maxChoise
+      )!;
+      return {
+        choise: state.actorResponses[chosenActor],
+      };
+    });
 
     const regenerationNode = this.graph.createNode(
       "regenerationNode",
@@ -228,8 +189,8 @@ export class Agent {
         {
           to: actorsNode,
           condition: (state) =>
-            state.actorAttempts < MAX_ATTEMPTS &&
-            ACTORS.some(({ name }) => this.graph.models[name].error),
+            state.actorAttempts < this.maxGenerationAttempts &&
+            this.actorModels.some(({ name }) => this.graph.models[name].error),
         },
       ],
       defaultTo: criticsNode,
@@ -240,8 +201,8 @@ export class Agent {
         {
           to: criticsNode,
           condition: (state) =>
-            state.criticAttempts < MAX_ATTEMPTS &&
-            CRITICS.some(({ name }) => this.graph.models[name].error),
+            state.criticAttempts < this.maxGenerationAttempts &&
+            this.criticModels.some(({ name }) => this.graph.models[name].error),
         },
       ],
       defaultTo: choiseNode,
@@ -262,6 +223,42 @@ export class Agent {
     });
 
     this.compiledGraph = this.graph.compile();
+  }
+
+  public setChoiseThreshold(threshold: number) {
+    this.choiseThreshold = threshold;
+  }
+
+  public setMaxGenerationAttempts(attempts: number) {
+    this.maxGenerationAttempts = attempts;
+  }
+
+  public setActorModels(models: ModelType[]) {
+    this.actorModels.forEach((model) => {
+      this.graph.removeModel(model.name);
+    });
+    this.actorModels = models;
+    this.actorModels.forEach((model) => {
+      const actor = new OpenAIActor({
+        name: model.name,
+        model: getChatModel(model.model as any, model.temperature),
+      });
+      this.graph.addModel(actor);
+    });
+  }
+
+  public setCriticModels(models: ModelType[]) {
+    this.criticModels.forEach((model) => {
+      this.graph.removeModel(model.name);
+    });
+    this.criticModels = models;
+    this.criticModels.forEach((model) => {
+      const critic = new OpenAICritic({
+        name: model.name,
+        model: getChatModel(model.model as any, model.temperature),
+      });
+      this.graph.addModel(critic);
+    });
   }
 
   public async invoke(prompt: string) {

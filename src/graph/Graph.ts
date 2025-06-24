@@ -47,6 +47,10 @@ export class Graph<GraphStateType extends AnnotationRoot<any>> {
     this._models.set(model.name, model);
   }
 
+  public removeModel(model: string | Model) {
+    this._models.delete(model instanceof Model ? model.name : model);
+  }
+
   public get models(): Readonly<Record<string, Model>> {
     return Object.fromEntries(this._models);
   }
