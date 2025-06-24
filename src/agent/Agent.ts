@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Graph } from "../graph/Graph";
 import { Annotation, type CompiledGraph } from "@langchain/langgraph/web";
-import { OpenAIActor } from "./OpenAIActor";
-import { OpenAICritic } from "./OpenAICritic";
-import type { AIMessage, AIMessageChunk } from "@langchain/core/messages";
-import { MODELS } from "./models";
+import { OpenAIActor } from "./models/OpenAIActor";
+import { OpenAICritic } from "./models/OpenAICritic";
+import { getChatModel, MODELS } from "./models/models";
 
 const StateAnnotation = Annotation.Root({
   actorResponses: Annotation<Record<string, string>>({
@@ -37,39 +36,29 @@ const StateAnnotation = Annotation.Root({
   }),
 });
 
-const ACTORS: { name: string; model: string; temperature: number }[] = [
+const ACTORS = [
   {
     name: "actor1",
-    model: MODELS.openai.gpt_3_5_turbo,
+    model: MODELS.xai.grok_3,
     temperature: 0.2,
   },
   {
     name: "actor2",
-    model: MODELS.openai.gpt_3_5_turbo,
+    model: MODELS.xai.grok_3,
     temperature: 0.5,
-  },
-  {
-    name: "actor3",
-    model: MODELS.openai.gpt_3_5_turbo,
-    temperature: 0.8,
   },
 ];
 
-const CRITICS: { name: string; model: string; temperature: number }[] = [
+const CRITICS = [
   {
     name: "critic1",
-    model: MODELS.openai.gpt_3_5_turbo,
+    model: MODELS.deepseek.deepseek_r1_0528,
     temperature: 0.2,
   },
   {
     name: "critic2",
-    model: MODELS.openai.gpt_3_5_turbo,
+    model: MODELS.deepseek.deepseek_r1_0528,
     temperature: 0.5,
-  },
-  {
-    name: "critic3",
-    model: MODELS.openai.gpt_3_5_turbo,
-    temperature: 0.8,
   },
 ];
 
@@ -83,14 +72,22 @@ export class Agent {
   constructor() {
     this.graph = new Graph(StateAnnotation);
 
-    ACTORS.forEach((actor) => {
-      const model = new OpenAIActor(actor);
-      this.graph.addModel(model);
+    ACTORS.forEach((act) => {
+      const model = getChatModel(act.model, act.temperature);
+      const actor = new OpenAIActor({
+        name: act.name,
+        model,
+      });
+      this.graph.addModel(actor);
     });
 
-    CRITICS.forEach((critic) => {
-      const model = new OpenAICritic(critic);
-      this.graph.addModel(model);
+    CRITICS.forEach((crit) => {
+      const model = getChatModel(crit.model, crit.temperature);
+      const critic = new OpenAICritic({
+        name: crit.name,
+        model: model,
+      });
+      this.graph.addModel(critic);
     });
 
     const actorsNode = this.graph.createNode(
@@ -101,7 +98,7 @@ export class Agent {
         const responses = await Promise.allSettled(
           ACTORS.map(async (actor) => {
             const model = models[actor.name] as OpenAIActor;
-            let answer: AIMessage | AIMessageChunk | null = null;
+            let answer: any;
             if (state.regeneration) {
               const pros: string[] = [];
               const cons: string[] = [];

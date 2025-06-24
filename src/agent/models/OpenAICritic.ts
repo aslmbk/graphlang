@@ -1,21 +1,13 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { Model } from "../graph/Model";
+import { Model } from "@/graph/Model";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
-import { tool } from "@langchain/core/tools";
+import { DynamicStructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { Runnable, RunnableSequence } from "@langchain/core/runnables";
-import {
-  ChatPromptTemplate,
-  MessagesPlaceholder,
-} from "@langchain/core/prompts";
-import { formatToOpenAIToolMessages } from "langchain/agents/format_scratchpad/openai_tools";
-import { OpenAIToolsAgentOutputParser } from "langchain/agents/openai/output_parser";
-import { AgentExecutor } from "langchain/agents";
+import { Runnable } from "@langchain/core/runnables";
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
 type OpenAICriticParams = {
   name: string;
-  model: string;
-  temperature: number;
+  model: BaseChatModel;
 };
 
 const toolSchema = z.object({
@@ -39,25 +31,20 @@ const toolSchema = z.object({
 });
 
 export class OpenAICritic extends Model {
-  protected model: ChatOpenAI;
-  private chain: Runnable;
+  protected model: Runnable;
 
   private _error: boolean = false;
   public result: z.infer<typeof toolSchema> | null = null;
+  private tools: DynamicStructuredTool[];
 
   constructor(params: OpenAICriticParams) {
     super(params);
-    this.model = new ChatOpenAI({
-      model: params.model,
-      temperature: params.temperature,
-      openAIApiKey: import.meta.env.VITE_API_KEY,
-      configuration: {
-        baseURL: import.meta.env.VITE_API_URL,
-      },
-    });
+    this.tools = [this.getTool()];
+    this.model = params.model.bindTools!(this.tools);
+  }
 
-    const tools = [this.getTool()];
-    const prompt = ChatPromptTemplate.fromMessages([
+  public async call(prompt: string) {
+    const systemMessage =
       new SystemMessage(`You are an Assistant who helps to choose the best ai answer from several options.
 You must choose the one you like the most.
 You should also leave a comment with the pros and cons of each option.
@@ -74,36 +61,20 @@ Assistant: "modelName1.
 Pros for modelName1: It is easy to understand, short and concise.
 Cons for modelName1: It can be difficult to debug.
 Pros for modelName2: It is easy to debug.
-Cons for modelName2: There is extra variables that can be bypassed."`),
-      ["human", "{input}"],
-      new MessagesPlaceholder("agent_scratchpad"),
-    ]);
+Cons for modelName2: There is extra variables that can be bypassed."`);
 
-    const llmWithTools = this.model.bindTools(tools);
-
-    const runnableAgent = RunnableSequence.from([
-      {
-        input: (i) => i.input,
-        agent_scratchpad: (i) => formatToOpenAIToolMessages(i.steps),
-      },
-      prompt,
-      llmWithTools,
-      new OpenAIToolsAgentOutputParser(),
-    ]).withConfig({ runName: "OpenAIToolsAgent" });
-
-    this.chain = AgentExecutor.fromAgentAndTools({
-      agent: runnableAgent,
-      tools,
-    });
-  }
-
-  public async call(prompt: string) {
+    this._error = false;
     try {
-      const response = await this.chain.invoke({
-        input: prompt,
-      });
-      this._error = false;
-      return response.output;
+      const response = await this.model.invoke([systemMessage, prompt]);
+      console.log("critic response", response, this.model);
+      for (const tool_call of response.tool_calls) {
+        for (const tool of this.tools) {
+          if (tool_call.name === tool.name) {
+            tool.invoke(tool_call.args);
+          }
+        }
+      }
+      return response;
     } catch (error) {
       this._error = true;
       console.error(error);
@@ -122,7 +93,8 @@ Cons for modelName2: There is extra variables that can be bypassed."`),
     ${options.map((option) => `${option.name}: ${option.option}`).join("\n")}
     `;
     this.result = null;
-    return await this.call(message);
+    const response = await this.call(message);
+    return response;
   }
 
   public get error() {
@@ -181,8 +153,7 @@ So the parameters for this tool are:
             "con": "There is extra variables that can be bypassed."
         }}
     ]
-}}
-        `,
+}}`,
         schema: toolSchema,
       }
     );

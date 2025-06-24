@@ -1,44 +1,37 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { Model } from "../graph/Model";
+import { Model } from "@/graph/Model";
 import {
   BaseMessage,
   HumanMessage,
   SystemMessage,
   AIMessage,
 } from "@langchain/core/messages";
+import type { Runnable } from "@langchain/core/runnables";
 
 type OpenAIActorParams = {
   name: string;
-  model: string;
-  temperature: number;
+  model: Runnable;
 };
 
 export class OpenAIActor extends Model {
-  protected model: ChatOpenAI;
+  protected model: Runnable;
   private history: BaseMessage[] = [];
 
   private _error: boolean = false;
 
   constructor(params: OpenAIActorParams) {
     super(params);
-    this.model = new ChatOpenAI({
-      model: params.model,
-      temperature: params.temperature,
-      openAIApiKey: import.meta.env.VITE_API_KEY,
-      configuration: {
-        baseURL: import.meta.env.VITE_API_URL,
-      },
-    });
+    this.model = params.model;
   }
 
   public async call(prompt: string) {
     const systemMessage = new SystemMessage("You are a helpful assistant.");
     const humanMessage = new HumanMessage(prompt);
     const promptMessages = [systemMessage, ...this.history, humanMessage];
+    this._error = false;
     try {
       const response = await this.model.invoke(promptMessages);
+      console.log("actor response", response);
       this.history.push(humanMessage, response);
-      this._error = false;
       return response;
     } catch (error) {
       this._error = true;
