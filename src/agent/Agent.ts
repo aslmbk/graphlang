@@ -36,7 +36,7 @@ const StateAnnotation = Annotation.Root({
   }),
 });
 
-type ModelType = {
+export type ModelType = {
   name: string;
   model: string;
   temperature: number;

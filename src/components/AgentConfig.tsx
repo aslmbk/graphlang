@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import { Slider } from "./ui/slider";
 import {
@@ -25,133 +25,47 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "./ui/sheet";
-import type { AgentConfig as AgentConfigType, ModelType } from "../lib/types";
-import { MODEL_PROVIDERS, generateRandomName } from "../lib/types";
-import { loadConfig, saveConfig, getProviderDisplayName } from "../lib/config";
+import { config } from "../lib/config";
+import { useStore } from "zustand";
+import { MODELS } from "@/agent/models/models";
+import { v4 as uuidv4 } from "uuid";
+import type { ModelType } from "@/agent/Agent";
 
-interface AgentConfigComponentProps {
-  onConfigChange: (config: AgentConfigType) => void;
-}
-
-export const AgentConfig = ({ onConfigChange }: AgentConfigComponentProps) => {
-  const [config, setConfig] = useState<AgentConfigType>(loadConfig());
+export const AgentConfig = () => {
+  const configStore = useStore(config, (state) => state);
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    onConfigChange(config);
-    saveConfig(config);
-  }, [config, onConfigChange]);
-
-  const addActorModel = () => {
-    const newModel: ModelType = {
-      id: crypto.randomUUID(),
-      name: generateRandomName(),
-      model: "openai/gpt-3.5-turbo",
-      temperature: 0.5,
-    };
-    setConfig((prev) => ({
-      ...prev,
-      actorModels: [...prev.actorModels, newModel],
-    }));
-  };
-
-  const removeActorModel = (id: string) => {
-    setConfig((prev) => ({
-      ...prev,
-      actorModels: prev.actorModels.filter((model) => model.id !== id),
-    }));
-  };
-
-  const updateActorModel = (id: string, updates: Partial<ModelType>) => {
-    setConfig((prev) => ({
-      ...prev,
-      actorModels: prev.actorModels.map((model) =>
-        model.id === id ? { ...model, ...updates } : model
-      ),
-    }));
-  };
-
-  const addCriticModel = () => {
-    const newModel: ModelType = {
-      id: crypto.randomUUID(),
-      name: generateRandomName(),
-      model: "openai/gpt-3.5-turbo",
-      temperature: 0.5,
-    };
-    setConfig((prev) => ({
-      ...prev,
-      criticModels: [...prev.criticModels, newModel],
-    }));
-  };
-
-  const removeCriticModel = (id: string) => {
-    setConfig((prev) => ({
-      ...prev,
-      criticModels: prev.criticModels.filter((model) => model.id !== id),
-    }));
-  };
-
-  const updateCriticModel = (id: string, updates: Partial<ModelType>) => {
-    setConfig((prev) => ({
-      ...prev,
-      criticModels: prev.criticModels.map((model) =>
-        model.id === id ? { ...model, ...updates } : model
-      ),
-    }));
-  };
 
   const ModelCard = ({
     model,
     onUpdate,
     onRemove,
-    type,
   }: {
     model: ModelType;
     onUpdate: (updates: Partial<ModelType>) => void;
     onRemove: () => void;
-    type: "actor" | "critic";
   }) => (
-    <Card className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary/20 hover:border-l-primary/60">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-3 h-3 rounded-full ${
-                type === "actor" ? "bg-blue-500" : "bg-purple-500"
-              }`}
-            />
-            <div>
-              <CardTitle className="text-base font-semibold">
-                {model.name}
-              </CardTitle>
-              <CardDescription className="text-xs">
-                {getProviderDisplayName(model.model)}
-              </CardDescription>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onRemove}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Card className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary/20 hover:border-l-primary/60 relative">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onRemove}
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10 z-10"
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </Button>
+      <CardContent className="space-y-4 pt-6">
         <div>
           <label className="text-sm font-medium mb-2 block text-muted-foreground">
             Модель
@@ -164,19 +78,16 @@ export const AgentConfig = ({ onConfigChange }: AgentConfigComponentProps) => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {MODEL_PROVIDERS.map((provider) => (
-                <div key={provider.name}>
+              {Object.entries(MODELS).map(([provider, models]) => (
+                <div key={provider}>
                   <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground bg-muted/50">
-                    {provider.displayName}
+                    {provider.toUpperCase()}
                   </div>
-                  {Object.entries(provider.models).map(([key, displayName]) => {
-                    const modelPath = `${provider.name}/${key}`;
-                    return (
-                      <SelectItem key={modelPath} value={modelPath}>
-                        {displayName}
-                      </SelectItem>
-                    );
-                  })}
+                  {Object.entries(models).map(([key, modelPath]) => (
+                    <SelectItem key={modelPath} value={modelPath}>
+                      {key}
+                    </SelectItem>
+                  ))}
                 </div>
               ))}
             </SelectContent>
@@ -272,16 +183,13 @@ export const AgentConfig = ({ onConfigChange }: AgentConfigComponentProps) => {
                     Максимум попыток генерации
                   </label>
                   <Badge variant="secondary" className="text-xs">
-                    {config.maxGenerationAttempts}
+                    {configStore.maxGenerationAttempts}
                   </Badge>
                 </div>
                 <Slider
-                  value={[config.maxGenerationAttempts]}
+                  value={[configStore.maxGenerationAttempts]}
                   onValueChange={([value]) =>
-                    setConfig((prev) => ({
-                      ...prev,
-                      maxGenerationAttempts: value,
-                    }))
+                    configStore.setMaxGenerationAttempts(value)
                   }
                   max={10}
                   min={1}
@@ -299,13 +207,13 @@ export const AgentConfig = ({ onConfigChange }: AgentConfigComponentProps) => {
                     Порог согласия критиков
                   </label>
                   <Badge variant="secondary" className="text-xs">
-                    {config.choiseThreshold}%
+                    {configStore.choiseThreshold}%
                   </Badge>
                 </div>
                 <Slider
-                  value={[config.choiseThreshold]}
+                  value={[configStore.choiseThreshold]}
                   onValueChange={([value]) =>
-                    setConfig((prev) => ({ ...prev, choiseThreshold: value }))
+                    configStore.setChoiseThreshold(value)
                   }
                   max={100}
                   min={0}
@@ -335,7 +243,16 @@ export const AgentConfig = ({ onConfigChange }: AgentConfigComponentProps) => {
                   </CardDescription>
                 </div>
                 <Button
-                  onClick={addActorModel}
+                  onClick={() =>
+                    configStore.setActorModels([
+                      ...configStore.actorModels,
+                      {
+                        name: uuidv4(),
+                        model: MODELS.openai.gpt_3_5_turbo,
+                        temperature: 0.5,
+                      },
+                    ])
+                  }
                   size="sm"
                   className="bg-green-600 hover:bg-green-700"
                 >
@@ -357,16 +274,27 @@ export const AgentConfig = ({ onConfigChange }: AgentConfigComponentProps) => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {config.actorModels.map((model) => (
+              {configStore.actorModels.map((model) => (
                 <ModelCard
-                  key={model.id}
+                  key={model.name}
                   model={model}
-                  onUpdate={(updates) => updateActorModel(model.id, updates)}
-                  onRemove={() => removeActorModel(model.id)}
-                  type="actor"
+                  onUpdate={(updates) =>
+                    configStore.setActorModels(
+                      configStore.actorModels.map((m) =>
+                        m.name === model.name ? { ...m, ...updates } : m
+                      )
+                    )
+                  }
+                  onRemove={() =>
+                    configStore.setActorModels(
+                      configStore.actorModels.filter(
+                        (m) => m.name !== model.name
+                      )
+                    )
+                  }
                 />
               ))}
-              {config.actorModels.length === 0 && (
+              {configStore.actorModels.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-muted-foreground/20 rounded-lg">
                   <svg
                     className="w-8 h-8 mx-auto mb-2 opacity-50"
@@ -403,7 +331,16 @@ export const AgentConfig = ({ onConfigChange }: AgentConfigComponentProps) => {
                   </CardDescription>
                 </div>
                 <Button
-                  onClick={addCriticModel}
+                  onClick={() =>
+                    configStore.setCriticModels([
+                      ...configStore.criticModels,
+                      {
+                        name: uuidv4(),
+                        model: MODELS.openai.gpt_4o,
+                        temperature: 0.5,
+                      },
+                    ])
+                  }
                   size="sm"
                   className="bg-orange-600 hover:bg-orange-700"
                 >
@@ -425,16 +362,27 @@ export const AgentConfig = ({ onConfigChange }: AgentConfigComponentProps) => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {config.criticModels.map((model) => (
+              {configStore.criticModels.map((model) => (
                 <ModelCard
-                  key={model.id}
+                  key={model.name}
                   model={model}
-                  onUpdate={(updates) => updateCriticModel(model.id, updates)}
-                  onRemove={() => removeCriticModel(model.id)}
-                  type="critic"
+                  onUpdate={(updates) =>
+                    configStore.setCriticModels(
+                      configStore.criticModels.map((m) =>
+                        m.name === model.name ? { ...m, ...updates } : m
+                      )
+                    )
+                  }
+                  onRemove={() =>
+                    configStore.setCriticModels(
+                      configStore.criticModels.filter(
+                        (m) => m.name !== model.name
+                      )
+                    )
+                  }
                 />
               ))}
-              {config.criticModels.length === 0 && (
+              {configStore.criticModels.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-muted-foreground/20 rounded-lg">
                   <svg
                     className="w-8 h-8 mx-auto mb-2 opacity-50"

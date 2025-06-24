@@ -1,117 +1,69 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { AgentConfig, ModelType } from "./types";
-import { generateRandomName, MODEL_PROVIDERS } from "./types";
-import { MODELS } from "../agent/models/models";
+import { MODELS } from "@/agent/models/models";
+import type { ModelType } from "../agent/Agent";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { v4 as uuidv4 } from "uuid";
 
-const CONFIG_STORAGE_KEY = "agent-config";
+type State = {
+  choiseThreshold: number;
+  maxGenerationAttempts: number;
+  actorModels: ModelType[];
+  criticModels: ModelType[];
+};
 
-export const getDefaultConfig = (): AgentConfig => {
-  // Генерируем 3 случайных актора
-  const actorModels: ModelType[] = [];
-  const usedModels = new Set<string>();
+type Actions = {
+  setChoiseThreshold: (choiseThreshold: number) => void;
+  setMaxGenerationAttempts: (maxGenerationAttempts: number) => void;
+  setActorModels: (actorModels: ModelType[]) => void;
+  setCriticModels: (criticModels: ModelType[]) => void;
+};
 
-  for (let i = 0; i < 3; i++) {
-    let modelKey: string;
-    let providerKey: string;
+const defaultState: State = {
+  choiseThreshold: 51,
+  maxGenerationAttempts: 3,
+  actorModels: [
+    {
+      name: uuidv4(),
+      model: MODELS.xai.grok_3,
+      temperature: 0.2,
+    },
+    {
+      name: uuidv4(),
+      model: MODELS.openai.gpt_3_5_turbo,
+      temperature: 0.5,
+    },
+    {
+      name: uuidv4(),
+      model: MODELS.google.gemini_2_5_flash,
+      temperature: 0.8,
+    },
+  ],
+  criticModels: [
+    {
+      name: uuidv4(),
+      model: MODELS.openai.gpt_4o,
+      temperature: 0.2,
+    },
+    {
+      name: uuidv4(),
+      model: MODELS.anthropic.claude_3_7_sonnet,
+      temperature: 0.5,
+    },
+  ],
+};
 
-    do {
-      const provider =
-        MODEL_PROVIDERS[Math.floor(Math.random() * MODEL_PROVIDERS.length)];
-      providerKey = provider.name;
-      const modelKeys = Object.keys(provider.models);
-      modelKey = modelKeys[Math.floor(Math.random() * modelKeys.length)];
-    } while (usedModels.has(`${providerKey}/${modelKey}`));
-
-    usedModels.add(`${providerKey}/${modelKey}`);
-
-    const modelValue = (MODELS as any)[providerKey]?.[modelKey];
-    if (modelValue) {
-      actorModels.push({
-        id: crypto.randomUUID(),
-        name: generateRandomName(),
-        model: modelValue,
-        temperature: 0.5,
-      });
+export const config = create<State & Actions>()(
+  persist(
+    (set) => ({
+      ...defaultState,
+      setChoiseThreshold: (choiseThreshold: number) => set({ choiseThreshold }),
+      setMaxGenerationAttempts: (maxGenerationAttempts: number) =>
+        set({ maxGenerationAttempts }),
+      setActorModels: (actorModels: ModelType[]) => set({ actorModels }),
+      setCriticModels: (criticModels: ModelType[]) => set({ criticModels }),
+    }),
+    {
+      name: "config",
     }
-  }
-
-  // Генерируем 3 случайных критика
-  const criticModels: ModelType[] = [];
-  usedModels.clear();
-
-  for (let i = 0; i < 3; i++) {
-    let modelKey: string;
-    let providerKey: string;
-
-    do {
-      const provider =
-        MODEL_PROVIDERS[Math.floor(Math.random() * MODEL_PROVIDERS.length)];
-      providerKey = provider.name;
-      const modelKeys = Object.keys(provider.models);
-      modelKey = modelKeys[Math.floor(Math.random() * modelKeys.length)];
-    } while (usedModels.has(`${providerKey}/${modelKey}`));
-
-    usedModels.add(`${providerKey}/${modelKey}`);
-
-    const modelValue = (MODELS as any)[providerKey]?.[modelKey];
-    if (modelValue) {
-      criticModels.push({
-        id: crypto.randomUUID(),
-        name: generateRandomName(),
-        model: modelValue,
-        temperature: 0.5,
-      });
-    }
-  }
-
-  return {
-    maxGenerationAttempts: 3,
-    choiseThreshold: 51,
-    actorModels,
-    criticModels,
-  };
-};
-
-export const loadConfig = (): AgentConfig => {
-  try {
-    const stored = localStorage.getItem(CONFIG_STORAGE_KEY);
-    if (stored) {
-      const config = JSON.parse(stored);
-      if (
-        config.maxGenerationAttempts &&
-        config.choiseThreshold &&
-        Array.isArray(config.actorModels) &&
-        Array.isArray(config.criticModels)
-      ) {
-        return config;
-      }
-    }
-  } catch (error) {
-    console.warn("Failed to load config from localStorage:", error);
-  }
-
-  return getDefaultConfig();
-};
-
-export const saveConfig = (config: AgentConfig): void => {
-  try {
-    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
-  } catch (error) {
-    console.error("Failed to save config to localStorage:", error);
-  }
-};
-
-export const getModelDisplayName = (modelPath: string): string => {
-  const [provider, model] = modelPath.split("/");
-  const providerData = MODEL_PROVIDERS.find((p) => p.name === provider);
-  if (providerData && providerData.models[model]) {
-    return `${providerData.displayName} - ${providerData.models[model]}`;
-  }
-  return modelPath;
-};
-
-export const getProviderDisplayName = (modelPath: string): string => {
-  const [provider] = modelPath.split("/");
-  const providerData = MODEL_PROVIDERS.find((p) => p.name === provider);
-  return providerData?.displayName || provider;
-};
+  )
+);
