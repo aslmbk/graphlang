@@ -1,6 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { Model } from "../graph/Model";
-import { MODELS } from "./types";
 import {
   BaseMessage,
   HumanMessage,
@@ -10,7 +9,7 @@ import {
 
 type OpenAIActorParams = {
   name: string;
-  model: MODELS;
+  model: string;
   temperature: number;
 };
 
@@ -25,7 +24,10 @@ export class OpenAIActor extends Model {
     this.model = new ChatOpenAI({
       model: params.model,
       temperature: params.temperature,
-      openAIApiKey: import.meta.env.VITE_OPENAI_API_KEY,
+      openAIApiKey: import.meta.env.VITE_API_KEY,
+      configuration: {
+        baseURL: import.meta.env.VITE_API_URL,
+      },
     });
   }
 

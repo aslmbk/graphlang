@@ -2,9 +2,9 @@
 import { Graph } from "../graph/Graph";
 import { Annotation, type CompiledGraph } from "@langchain/langgraph/web";
 import { OpenAIActor } from "./OpenAIActor";
-import { MODELS } from "./types";
 import { OpenAICritic } from "./OpenAICritic";
 import type { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import { MODELS } from "./models";
 
 const StateAnnotation = Annotation.Root({
   actorResponses: Annotation<Record<string, string>>({
@@ -37,38 +37,38 @@ const StateAnnotation = Annotation.Root({
   }),
 });
 
-const ACTORS: { name: string; model: MODELS; temperature: number }[] = [
+const ACTORS: { name: string; model: string; temperature: number }[] = [
   {
     name: "actor1",
-    model: MODELS.GPT_3_5_TURBO,
+    model: MODELS.openai.gpt_3_5_turbo,
     temperature: 0.2,
   },
   {
     name: "actor2",
-    model: MODELS.GPT_3_5_TURBO,
+    model: MODELS.openai.gpt_3_5_turbo,
     temperature: 0.5,
   },
   {
     name: "actor3",
-    model: MODELS.GPT_3_5_TURBO,
+    model: MODELS.openai.gpt_3_5_turbo,
     temperature: 0.8,
   },
 ];
 
-const CRITICS: { name: string; model: MODELS; temperature: number }[] = [
+const CRITICS: { name: string; model: string; temperature: number }[] = [
   {
     name: "critic1",
-    model: MODELS.GPT_3_5_TURBO,
+    model: MODELS.openai.gpt_3_5_turbo,
     temperature: 0.2,
   },
   {
     name: "critic2",
-    model: MODELS.GPT_3_5_TURBO,
+    model: MODELS.openai.gpt_3_5_turbo,
     temperature: 0.5,
   },
   {
     name: "critic3",
-    model: MODELS.GPT_3_5_TURBO,
+    model: MODELS.openai.gpt_3_5_turbo,
     temperature: 0.8,
   },
 ];

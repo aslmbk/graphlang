@@ -1,6 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { Model } from "../graph/Model";
-import { MODELS } from "./types";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
@@ -15,7 +14,7 @@ import { AgentExecutor } from "langchain/agents";
 
 type OpenAICriticParams = {
   name: string;
-  model: MODELS;
+  model: string;
   temperature: number;
 };
 
@@ -51,7 +50,10 @@ export class OpenAICritic extends Model {
     this.model = new ChatOpenAI({
       model: params.model,
       temperature: params.temperature,
-      openAIApiKey: import.meta.env.VITE_OPENAI_API_KEY,
+      openAIApiKey: import.meta.env.VITE_API_KEY,
+      configuration: {
+        baseURL: import.meta.env.VITE_API_URL,
+      },
     });
 
     const tools = [this.getTool()];
