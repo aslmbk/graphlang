@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Agent } from "./agent/Agent";
 import { config } from "./lib/config";
 import { useStore } from "zustand";
 import { MainLayout } from "./components/layout/MainLayout";
 import { ChatContainer } from "./components/chat/ChatContainer";
-
-const agent = new Agent();
 
 export const App = () => {
   const [prompt, setPrompt] = useState("");
@@ -13,18 +11,22 @@ export const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const configStore = useStore(config, (state) => state);
 
+  const agentRef = useRef(new Agent());
+
   // Применяем конфигурацию к агенту
   useEffect(() => {
-    agent.setMaxGenerationAttempts(configStore.maxGenerationAttempts);
-    agent.setChoiseThreshold(configStore.choiseThreshold);
-    agent.setActorModels(configStore.actorModels);
-    agent.setCriticModels(configStore.criticModels);
+    agentRef.current.setMaxGenerationAttempts(
+      configStore.maxGenerationAttempts
+    );
+    agentRef.current.setChoiseThreshold(configStore.choiseThreshold);
+    agentRef.current.setActorModels(configStore.actorModels);
+    agentRef.current.setCriticModels(configStore.criticModels);
   }, [configStore]);
 
   const handleSubmit = () => {
     if (prompt.trim()) {
       setIsLoading(true);
-      agent
+      agentRef.current
         .invoke(prompt)
         .then((response) => {
           setResponse(response.choise);
