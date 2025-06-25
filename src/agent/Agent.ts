@@ -324,14 +324,19 @@ export class Agent {
   }
 
   public async invoke(prompt: string) {
-    return this.compiledGraph.invoke({
-      prompt,
-      choise: null,
-      actorAttempts: 0,
-      criticAttempts: 0,
-      actorResponses: {},
-      criticResponses: {},
-      regeneration: false,
-    });
+    return this.compiledGraph.invoke(
+      {
+        prompt,
+        choise: null,
+        actorAttempts: 0,
+        criticAttempts: 0,
+        actorResponses: {},
+        criticResponses: {},
+        regeneration: false,
+      },
+      {
+        recursionLimit: 1000,
+      }
+    );
   }
 }
