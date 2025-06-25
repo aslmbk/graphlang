@@ -4,6 +4,7 @@ import { Annotation, type CompiledGraph } from "@langchain/langgraph/web";
 import { OpenAIActor } from "./models/OpenAIActor";
 import { OpenAICritic } from "./models/OpenAICritic";
 import { getChatModel } from "./models/models";
+import { Events } from "@/lib/Events";
 
 const StateAnnotation = Annotation.Root({
   actorResponses: Annotation<Record<string, string>>({
@@ -42,6 +43,11 @@ export type ModelType = {
   temperature: number;
 };
 
+export type Payload<T> = {
+  name: string;
+  payload: T;
+};
+
 export class Agent {
   private graph: Graph<typeof StateAnnotation>;
   private compiledGraph: CompiledGraph<any>;
@@ -50,6 +56,14 @@ export class Agent {
   private maxGenerationAttempts: number = 3;
   private actorModels: ModelType[] = [];
   private criticModels: ModelType[] = [];
+
+  public events = new Events<{
+    "actor-response": Payload<string>;
+    "critic-response": Payload<string>;
+    "actor-generation": Payload<boolean>;
+    "critic-generation": Payload<boolean>;
+    choise: Payload<string>;
+  }>();
 
   constructor() {
     this.graph = new Graph(StateAnnotation);
@@ -70,6 +84,10 @@ export class Agent {
           filteredModels.map(async (actor) => {
             const model = models[actor.name] as OpenAIActor;
             let answer: any;
+            this.events.trigger("actor-generation", {
+              name: actor.name,
+              payload: true,
+            });
             if (state.regeneration) {
               const pros: string[] = [];
               const cons: string[] = [];
@@ -107,6 +125,17 @@ export class Agent {
           }
         });
 
+        Object.keys(actorResponses).forEach((name) => {
+          this.events.trigger("actor-response", {
+            name,
+            payload: actorResponses[name],
+          });
+          this.events.trigger("actor-generation", {
+            name,
+            payload: false,
+          });
+        });
+
         return {
           actorAttempts: state.actorAttempts + 1,
           actorResponses,
@@ -136,6 +165,10 @@ export class Agent {
         const responses = await Promise.allSettled(
           filteredModels.map(async (critic) => {
             const model = models[critic.name] as OpenAICritic;
+            this.events.trigger("critic-generation", {
+              name: critic.name,
+              payload: true,
+            });
             const answer = await model.generateResponse(
               state.prompt,
               actorResponses
@@ -152,6 +185,18 @@ export class Agent {
             criticResponses[response.value.name] =
               response.value.answer.content;
           }
+        });
+
+        Object.keys(criticResponses).forEach((name) => {
+          const criticModel = this.graph.models[name] as OpenAICritic;
+          this.events.trigger("critic-response", {
+            name,
+            payload: criticModel.result?.choice ?? "",
+          });
+          this.events.trigger("critic-generation", {
+            name,
+            payload: false,
+          });
         });
 
         return {
@@ -178,6 +223,10 @@ export class Agent {
       const chosenActor = Object.keys(choises).find(
         (name) => choises[name] === maxChoise
       )!;
+      this.events.trigger("choise", {
+        name: chosenActor,
+        payload: state.actorResponses[chosenActor],
+      });
       return {
         choise: state.actorResponses[chosenActor],
       };

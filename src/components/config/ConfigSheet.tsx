@@ -51,7 +51,7 @@ export const ConfigSheet = ({
         </Button>
       </SheetTrigger>
       <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto bg-gradient-to-b from-background to-background/95">
-        <SheetHeader className="mb-6">
+        <SheetHeader>
           <SheetTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Настройки агента
           </SheetTitle>
