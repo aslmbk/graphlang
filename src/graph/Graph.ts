@@ -91,10 +91,14 @@ export class Graph<GraphStateType extends AnnotationRoot<any>> {
     });
     this.validateEdgeParams(handledParams);
     this.workflow.addConditionalEdges(handledParams.from as any, (state) => {
-      for (const edge of edgeParams.to) {
-        if (edge.condition(state)) return edge.to as any;
-      }
-      return handledParams.to as any;
+      const nextEdge = edgeParams.to.find((edge) => edge.condition(state));
+      if (!nextEdge) return handledParams.to;
+      const handledConditionParam = this.handleEdgeParams({
+        from: edgeParams.from,
+        to: nextEdge.to,
+      });
+      this.validateEdgeParams(handledConditionParam);
+      return handledConditionParam.to;
     });
   }
 

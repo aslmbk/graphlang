@@ -57,10 +57,17 @@ export class Agent {
     const actorsNode = this.graph.createNode(
       "actorsNode",
       async (state, models) => {
+        console.log("actors node", state);
         const actorResponses = { ...state.actorResponses };
 
+        const filteredModels = this.actorModels.filter(
+          (actor) =>
+            state.actorAttempts === 0 ||
+            (state.actorAttempts > 0 && this.graph.models[actor.name].error)
+        );
+
         const responses = await Promise.allSettled(
-          this.actorModels.map(async (actor) => {
+          filteredModels.map(async (actor) => {
             const model = models[actor.name] as OpenAIActor;
             let answer: any;
             if (state.regeneration) {
@@ -110,6 +117,7 @@ export class Agent {
     const criticsNode = this.graph.createNode(
       "criticsNode",
       async (state, models) => {
+        console.log("critics node", state);
         const criticResponses = { ...state.criticResponses };
 
         const actorResponses = Object.keys(state.actorResponses).map(
@@ -119,8 +127,14 @@ export class Agent {
           })
         );
 
+        const filteredModels = this.criticModels.filter(
+          (critic) =>
+            state.criticAttempts === 0 ||
+            (state.criticAttempts > 0 && this.graph.models[critic.name].error)
+        );
+
         const responses = await Promise.allSettled(
-          this.criticModels.map(async (critic) => {
+          filteredModels.map(async (critic) => {
             const model = models[critic.name] as OpenAICritic;
             const answer = await model.generateResponse(
               state.prompt,
@@ -148,6 +162,7 @@ export class Agent {
     );
 
     const choiseNode = this.graph.createNode("choiseNode", async (state) => {
+      console.log("choise node", state);
       const choises: Record<string, number> = {};
       this.actorModels.forEach((actor) => {
         choises[actor.name] = 0;
@@ -170,7 +185,8 @@ export class Agent {
 
     const regenerationNode = this.graph.createNode(
       "regenerationNode",
-      async () => {
+      async (state) => {
+        console.log("regeneration node", state);
         return {
           regeneration: true,
           actorAttempts: 0,
