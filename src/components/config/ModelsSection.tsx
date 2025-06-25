@@ -72,7 +72,7 @@ export const ModelsSection = ({
             className={`${color} hover:${color} opacity-90 hover:opacity-80 text-white cursor-pointer`}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Т1етоха
+            Add
           </Button>
         </div>
       </CardHeader>
@@ -88,7 +88,7 @@ export const ModelsSection = ({
         {models.length === 0 && (
           <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-muted-foreground/20 rounded-lg">
             <Plus className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Еса ю {title.toLowerCase()}</p>
+            <p className="text-sm">No {title.toLowerCase()}</p>
           </div>
         )}
       </CardContent>

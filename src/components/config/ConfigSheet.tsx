@@ -47,16 +47,16 @@ export const ConfigSheet = ({
           className="gap-2 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-background/80"
         >
           <Settings className="w-4 h-4" />
-          Х1оттам
+          Settings
         </Button>
       </SheetTrigger>
       <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto bg-gradient-to-b from-background to-background/95">
         <SheetHeader>
           <SheetTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Моделийн х1оттамаш
+            Model settings
           </SheetTitle>
           <SheetDescription className="text-base">
-            Хьайн AI агентан болхбаран конфиг нисъе, дика жамӀаш хилийта
+            Configure your AI agent's behavior for better results
           </SheetDescription>
         </SheetHeader>
 
@@ -71,8 +71,8 @@ export const ConfigSheet = ({
           <Separator className="bg-gradient-to-r from-transparent via-border to-transparent" />
 
           <ModelsSection
-            title="Акторш"
-            description="Хьан хаттаршна жоьпаш луш йолу моделаш."
+            title="Actors"
+            description="Models that generate responses to your questions."
             models={actorModels}
             onModelsChange={onActorModelsChange}
             defaultModel={MODELS.openai.gpt_3_5_turbo}
@@ -83,8 +83,8 @@ export const ConfigSheet = ({
           <Separator className="bg-gradient-to-r from-transparent via-border to-transparent" />
 
           <ModelsSection
-            title="Критикаш"
-            description="Акторши жоьпийн дикаллан мах хадоран моделаш."
+            title="Critics"
+            description="Models that evaluate the quality of actor responses."
             models={criticModels}
             onModelsChange={onCriticModelsChange}
             defaultModel={MODELS.openai.gpt_4o}

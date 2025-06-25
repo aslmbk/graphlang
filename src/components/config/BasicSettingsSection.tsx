@@ -24,30 +24,30 @@ export const BasicSettingsSection = ({
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
         <div className="w-2 h-2 bg-blue-500 rounded-full" />
-        Коьрта конфигаш
+        Basic settings
       </CardTitle>
-      <CardDescription>Генерацин а, сацамаш баран низам а.</CardDescription>
+      <CardDescription>Generation and decision making rules.</CardDescription>
     </CardHeader>
     <CardContent className="space-y-6">
       <ConfigSlider
-        label="Генераци яран максимум г1ортам"
+        label="Maximum generation attempts"
         value={maxGenerationAttempts}
         onValueChange={onMaxGenerationAttemptsChange}
         max={10}
         min={1}
         step={1}
-        description="Сацам тӀеэцале хьалха генераци ян гӀортаман терахь."
+        description="Number of attempts before making a decision."
       />
 
       <ConfigSlider
-        label="Критикан барт хиларан не1саг1а."
+        label="Critic agreement threshold"
         value={choiseThreshold}
         onValueChange={onChoiseThresholdChange}
         max={100}
         min={0}
         step={1}
         unit="%"
-        description="Критикашна юкъахь сацам тӀеэца барт хиларан лаххара процент"
+        description="Minimum percentage of agreement among critics to make a decision"
       />
     </CardContent>
   </Card>

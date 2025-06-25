@@ -18,16 +18,16 @@ export const CriticsGenerationIndicator = () => {
             ></div>
           </div>
           <div className="flex-1">
-            <h4 className="font-medium text-foreground">Критикийн таллам</h4>
+            <h4 className="font-medium text-foreground">Critics analysis</h4>
             <p className="text-sm text-foreground/70">
-              Критикаш бу тоьлла жоп хоржуш
+              Critics are evaluating the best response
             </p>
           </div>
           <Badge
             variant="outline"
             className="text-orange-600 border-orange-500/50"
           >
-            Процесс
+            Processing
           </Badge>
         </div>
       </Card>

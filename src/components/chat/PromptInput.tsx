@@ -17,12 +17,12 @@ export const PromptInput = ({
         htmlFor="prompt-input"
         className="block text-sm font-medium text-foreground mb-2"
       >
-        Промпт язйе
+        Enter prompt
       </label>
       <Input
         id="prompt-input"
         type="text"
-        placeholder="Масала: Жопдоцу безамах лаьцна мог1анаш дазде..."
+        placeholder="Example: Tell me about interesting facts..."
         value={prompt}
         onChange={(e) => onPromptChange(e.target.value)}
         onKeyPress={onKeyPress}

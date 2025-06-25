@@ -31,7 +31,7 @@ export const ModelCard = ({ model, onUpdate, onRemove }: ModelCardProps) => (
     <CardContent className="space-y-4 pt-6">
       <div>
         <label className="text-sm font-medium mb-2 block text-muted-foreground">
-          Модел
+          Model
         </label>
         <Select
           value={model.model}
@@ -60,7 +60,7 @@ export const ModelCard = ({ model, onUpdate, onRemove }: ModelCardProps) => (
       <div>
         <div className="flex items-center justify-between mb-2">
           <label className="text-sm font-medium text-muted-foreground">
-            Йовхо
+            Temperature
           </label>
           <span className="text-xs text-muted-foreground">
             {model.temperature}

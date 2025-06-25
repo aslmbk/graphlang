@@ -103,7 +103,8 @@ export class Agent {
                   if (name === actor.name) pros.push(pro);
                 });
               });
-              const prompt = `Regenerate the answer.
+              const prompt = `Regenerate the answer for the following prompt:
+              ${state.prompt}
               Here is pros for the previous answer:
               ${pros.join("\n")}
               Here is cons for the previous answer:
@@ -113,11 +114,19 @@ export class Agent {
               stream = model.streamGenerateResponse(state.prompt);
             }
             for await (const chunk of stream) {
-              this.events.trigger("actor-response", {
-                name: actor.name,
-                payload: chunk.content,
-              });
+              if (!model.error) {
+                this.events.trigger("actor-response", {
+                  name: actor.name,
+                  payload: chunk.content,
+                });
+              }
               if (chunk.isComplete) {
+                if (model.error) {
+                  this.events.trigger("actor-response", {
+                    name: actor.name,
+                    payload: "Error generating response",
+                  });
+                }
                 actorResponses[actor.name] =
                   chunk.fullResponse.content.toString();
                 this.events.trigger("actor-generation", {
@@ -145,12 +154,12 @@ export class Agent {
         console.log("critics node", state);
         const criticResponses = { ...state.criticResponses };
 
-        const actorResponses = Object.keys(state.actorResponses).map(
-          (name) => ({
+        const actorResponses = Object.keys(state.actorResponses)
+          .filter((name) => !models[name].error)
+          .map((name) => ({
             name,
             option: state.actorResponses[name],
-          })
-        );
+          }));
 
         const filteredModels = this.criticModels.filter(
           (critic) =>
@@ -211,6 +220,7 @@ export class Agent {
       this.criticModels.forEach((critic) => {
         const criticModel = this.graph.models[critic.name] as OpenAICritic;
         const choise = criticModel.result?.choice;
+        console.log(`choise of critic ${critic.name}`, criticModel.result);
         if (choise) choises[choise]++;
       });
       const maxChoise = Math.max(...Object.values(choises));
