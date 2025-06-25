@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { FeedbackModal } from "./FeedbackModal";
 
 type Response = {
   payload: string;
@@ -10,9 +13,39 @@ type Response = {
 
 interface ActorsResponsesProps {
   responses: Record<string, Response>;
+  onGetFeedback: (actorName: string) => { pros: string[]; cons: string[] };
 }
 
-export const ActorsResponses = ({ responses }: ActorsResponsesProps) => {
+export const ActorsResponses = ({
+  responses,
+  onGetFeedback,
+}: ActorsResponsesProps) => {
+  const [feedbackModal, setFeedbackModal] = useState<{
+    isOpen: boolean;
+    actorName: string;
+    pros: string[];
+    cons: string[];
+  }>({
+    isOpen: false,
+    actorName: "",
+    pros: [],
+    cons: [],
+  });
+
+  const handleShowFeedback = (actorName: string) => {
+    const feedback = onGetFeedback(actorName);
+    setFeedbackModal({
+      isOpen: true,
+      actorName,
+      pros: feedback.pros,
+      cons: feedback.cons,
+    });
+  };
+
+  const handleCloseFeedback = () => {
+    setFeedbackModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
   return (
     <div className="mt-6 space-y-4">
       <h3 className="text-lg font-semibold text-foreground/80">
@@ -24,9 +57,18 @@ export const ActorsResponses = ({ responses }: ActorsResponsesProps) => {
             key={actorName}
             actorName={actorName}
             response={response}
+            onShowFeedback={handleShowFeedback}
           />
         ))}
       </div>
+
+      <FeedbackModal
+        actorName={feedbackModal.actorName}
+        pros={feedbackModal.pros}
+        cons={feedbackModal.cons}
+        isOpen={feedbackModal.isOpen}
+        onClose={handleCloseFeedback}
+      />
     </div>
   );
 };
@@ -34,9 +76,14 @@ export const ActorsResponses = ({ responses }: ActorsResponsesProps) => {
 interface ActorResponseCardProps {
   actorName: string;
   response: Response;
+  onShowFeedback: (actorName: string) => void;
 }
 
-const ActorResponseCard = ({ actorName, response }: ActorResponseCardProps) => {
+const ActorResponseCard = ({
+  actorName,
+  response,
+  onShowFeedback,
+}: ActorResponseCardProps) => {
   const getBackgroundClass = () => {
     if (response.chosen) {
       return "bg-green-500/20 border-green-500/30 shadow-lg shadow-green-500/20";
@@ -46,6 +93,9 @@ const ActorResponseCard = ({ actorName, response }: ActorResponseCardProps) => {
     }
     return "bg-card/50 border-border/50";
   };
+
+  // Проверяем, есть ли ошибка у актора
+  const hasError = response.payload === "Error generating response";
 
   return (
     <Card
@@ -69,6 +119,16 @@ const ActorResponseCard = ({ actorName, response }: ActorResponseCardProps) => {
             <Badge variant="outline" className="text-xs animate-pulse">
               Generating...
             </Badge>
+          )}
+          {!hasError && !response.generation && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onShowFeedback(actorName)}
+              className="text-xs h-6 px-2"
+            >
+              Feedback
+            </Button>
           )}
         </div>
       </div>

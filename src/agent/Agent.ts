@@ -355,4 +355,34 @@ export class Agent {
       }
     );
   }
+
+  public getActorFeedback(actorName: string) {
+    const pros: string[] = [];
+    const cons: string[] = [];
+
+    this.criticModels.forEach((critic) => {
+      const criticModel = this.graph.models[critic.name] as OpenAICritic;
+
+      // Пропускаем критиков с ошибками
+      if (criticModel.error || !criticModel.result) {
+        return;
+      }
+
+      // Добавляем pros для данного актора
+      criticModel.result.pros.forEach(({ name, pro }) => {
+        if (name === actorName) {
+          pros.push(pro);
+        }
+      });
+
+      // Добавляем cons для данного актора
+      criticModel.result.cons.forEach(({ name, con }) => {
+        if (name === actorName) {
+          cons.push(con);
+        }
+      });
+    });
+
+    return { pros, cons };
+  }
 }

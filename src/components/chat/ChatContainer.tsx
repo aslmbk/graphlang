@@ -20,6 +20,7 @@ interface ChatContainerProps {
   onKeyPress: (e: React.KeyboardEvent) => void;
   onSubmit: () => void;
   onClear: () => void;
+  onGetFeedback: (actorName: string) => { pros: string[]; cons: string[] };
 }
 
 export const ChatContainer = ({
@@ -30,6 +31,7 @@ export const ChatContainer = ({
   onKeyPress,
   onSubmit,
   onClear,
+  onGetFeedback,
 }: ChatContainerProps) => {
   return (
     <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl shadow-2xl p-8">
@@ -54,7 +56,7 @@ export const ChatContainer = ({
       />
 
       {/* Actor responses block */}
-      <ActorsResponses responses={responses} />
+      <ActorsResponses responses={responses} onGetFeedback={onGetFeedback} />
 
       {/* Critics generation indicator */}
       {isCriticsGeneration && <CriticsGenerationIndicator />}

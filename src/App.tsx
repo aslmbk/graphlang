@@ -132,6 +132,10 @@ export const App = () => {
     return Object.values(criticsGeneration).some((value) => value);
   }, [criticsGeneration]);
 
+  const handleGetFeedback = useCallback((actorName: string) => {
+    return agentRef.current.getActorFeedback(actorName);
+  }, []);
+
   return (
     <MainLayout>
       <ChatContainer
@@ -142,6 +146,7 @@ export const App = () => {
         onKeyPress={handleKeyPress}
         onSubmit={handleSubmit}
         onClear={handleClear}
+        onGetFeedback={handleGetFeedback}
       />
     </MainLayout>
   );
