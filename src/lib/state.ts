@@ -1,15 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-type State = {};
+type State = Record<string, unknown>;
 
-type Actions = {};
+type Actions = Record<string, unknown>;
 
 const defaultState: State = {};
 
 export const state = create<State & Actions>()(
   persist(
-    (set) => ({
+    () => ({
       ...defaultState,
     }),
     {
