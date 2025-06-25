@@ -13,7 +13,8 @@ type State = {
 
 type Actions = {
   setResponse: (name: string, response: Response) => void;
-  clearResponse: (name: string) => void;
+  resetResponse: (name: string) => void;
+  clearResponses: () => void;
 };
 
 export const blankResponse: Response = {
@@ -32,7 +33,10 @@ export const state = create<State & Actions>()((set, get) => ({
   setResponse: (name, response) => {
     set({ responses: { ...get().responses, [name]: response } });
   },
-  clearResponse: (name) => {
+  resetResponse: (name) => {
     set({ responses: { ...get().responses, [name]: blankResponse } });
+  },
+  clearResponses: () => {
+    set({ responses: {} });
   },
 }));

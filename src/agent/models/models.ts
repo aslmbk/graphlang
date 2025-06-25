@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChatOpenAI } from "@langchain/openai";
-import { ChatDeepSeek } from "@langchain/deepseek";
 
 export const MODELS = {
   openai: {
@@ -103,11 +102,19 @@ export const getChatModel = (model: ModelName, temperature: number) => {
     });
   }
   if (DEEPSEEK_MODELS.includes(model as any)) {
-    return new ChatDeepSeek({
+    // return new ChatDeepSeek({
+    //   model,
+    //   temperature,
+    //   apiKey: import.meta.env.VITE_API_KEY,
+    //   // openAIApiKey: import.meta.env.VITE_API_KEY,
+    //   configuration: {
+    //     baseURL: import.meta.env.VITE_API_URL,
+    //   },
+    // });
+    return new ChatOpenAI({
       model,
       temperature,
-      apiKey: import.meta.env.VITE_API_KEY,
-      // openAIApiKey: import.meta.env.VITE_API_KEY,
+      openAIApiKey: import.meta.env.VITE_API_KEY,
       configuration: {
         baseURL: import.meta.env.VITE_API_URL,
       },

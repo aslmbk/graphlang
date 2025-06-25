@@ -29,7 +29,7 @@ const defaultState: State = {
     },
     {
       name: uuidv4(),
-      model: MODELS.openai.gpt_3_5_turbo,
+      model: MODELS.openai.gpt_4o,
       temperature: 0.5,
     },
     {
@@ -41,7 +41,7 @@ const defaultState: State = {
   criticModels: [
     {
       name: uuidv4(),
-      model: MODELS.openai.gpt_4o,
+      model: MODELS.deepseek.deepseek_chat_v3_0324,
       temperature: 0.2,
     },
     {
@@ -63,7 +63,7 @@ export const config = create<State & Actions>()(
       setCriticModels: (criticModels: ModelType[]) => set({ criticModels }),
     }),
     {
-      name: "config",
+      name: "config2",
     }
   )
 );

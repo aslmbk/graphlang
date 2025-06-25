@@ -1,16 +1,9 @@
 import { Model } from "@/graph/Model";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
-import { tool } from "@langchain/core/tools";
+import { DynamicStructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { Runnable } from "@langchain/core/runnables";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { Runnable, RunnableSequence } from "@langchain/core/runnables";
-import {
-  ChatPromptTemplate,
-  MessagesPlaceholder,
-} from "@langchain/core/prompts";
-import { formatToOpenAIToolMessages } from "langchain/agents/format_scratchpad/openai_tools";
-import { OpenAIToolsAgentOutputParser } from "langchain/agents/openai/output_parser";
-import { AgentExecutor } from "langchain/agents";
 
 type OpenAICriticParams = {
   name: string;
@@ -42,12 +35,16 @@ export class OpenAICritic extends Model {
 
   private _error: boolean = false;
   public result: z.infer<typeof toolSchema> | null = null;
+  private tools: DynamicStructuredTool[];
 
   constructor(params: OpenAICriticParams) {
     super(params);
-    const tools = [this.getTool()];
+    this.tools = [this.getTool()];
+    this.model = params.model.bindTools!(this.tools);
+  }
 
-    const prompt = ChatPromptTemplate.fromMessages([
+  public async call(prompt: string) {
+    const systemMessage =
       new SystemMessage(`You are an Assistant who helps to choose the best ai answer from several options.
 You must choose the one you like the most.
 You should also leave a comment with the pros and cons of each option.
@@ -64,33 +61,18 @@ Assistant: "modelName1.
 Pros for modelName1: It is easy to understand, short and concise.
 Cons for modelName1: It can be difficult to debug.
 Pros for modelName2: It is easy to debug.
-        Cons for modelName2: There is extra variables that can be bypassed."`),
-      ["human", "{input}"],
-      new MessagesPlaceholder("agent_scratchpad"),
-    ]);
+Cons for modelName2: There is extra variables that can be bypassed."`);
 
-    const llmWithTools = params.model.bindTools!(tools);
-
-    const runnableAgent = RunnableSequence.from([
-      {
-        input: (i) => i.input,
-        agent_scratchpad: (i) => formatToOpenAIToolMessages(i.steps),
-      },
-      prompt,
-      llmWithTools,
-      new OpenAIToolsAgentOutputParser(),
-    ]).withConfig({ runName: "OpenAIToolsAgent" });
-
-    this.model = AgentExecutor.fromAgentAndTools({
-      agent: runnableAgent,
-      tools,
-    });
-  }
-
-  public async call(prompt: string) {
     this._error = false;
     try {
-      const response = await this.model.invoke({ input: prompt });
+      const response = await this.model.invoke([systemMessage, prompt]);
+      for (const tool_call of response.tool_calls) {
+        for (const tool of this.tools) {
+          if (tool_call.name === tool.name) {
+            tool.invoke(tool_call.args);
+          }
+        }
+      }
       return response;
     } catch (error) {
       this._error = true;

@@ -189,15 +189,18 @@ export class Agent {
           if (response.status === "fulfilled") {
             criticResponses[response.value.name] =
               response.value.answer.content;
+
+            const criticModel = this.graph.models[
+              response.value.name
+            ] as OpenAICritic;
+            this.events.trigger("critic-response", {
+              name: response.value.name,
+              payload: criticModel.result?.choice ?? "",
+            });
           }
         });
 
         Object.keys(criticResponses).forEach((name) => {
-          const criticModel = this.graph.models[name] as OpenAICritic;
-          this.events.trigger("critic-response", {
-            name,
-            payload: criticModel.result?.choice ?? "",
-          });
           this.events.trigger("critic-generation", {
             name,
             payload: false,
@@ -224,7 +227,10 @@ export class Agent {
         if (choise) choises[choise]++;
       });
       const maxChoise = Math.max(...Object.values(choises));
-      const maxChoiseInPercent = (maxChoise / this.criticModels.length) * 100;
+      const nonErrorCritics = this.criticModels.filter(
+        (critic) => !this.graph.models[critic.name].error
+      );
+      const maxChoiseInPercent = (maxChoise / nonErrorCritics.length) * 100;
       if (maxChoiseInPercent < this.choiseThreshold) return { choise: null };
       const chosenActor = Object.keys(choises).find(
         (name) => choises[name] === maxChoise

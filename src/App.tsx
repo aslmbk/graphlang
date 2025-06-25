@@ -19,10 +19,12 @@ export const App = () => {
   const clearResponses = useCallback(() => {
     const actorModels = config.getState().actorModels;
     const criticModels = config.getState().criticModels;
-    const clearResponse = state.getState().clearResponse;
+    const resetResponse = state.getState().resetResponse;
+    state.getState().clearResponses();
     actorModels.forEach((model) => {
-      clearResponse(model.name);
+      resetResponse(model.name);
     });
+    setCriticsGeneration({});
     criticModels.forEach((model) => {
       setCriticsGeneration((prev) => ({ ...prev, [model.name]: false }));
     });
