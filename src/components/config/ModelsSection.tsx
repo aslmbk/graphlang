@@ -57,7 +57,7 @@ export const ModelsSection = ({
   return (
     <Card className={`border-0 shadow-lg ${bgGradient}`}>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <CardTitle className="flex items-center gap-2">
               <div className={`w-2 h-2 ${color} rounded-full`} />
@@ -68,11 +68,8 @@ export const ModelsSection = ({
           <Button
             onClick={handleAddModel}
             size="sm"
-            className={`${color
-              .replace("bg-", "bg-")
-              .replace("500", "600")} hover:${color
-              .replace("bg-", "bg-")
-              .replace("500", "700")}`}
+            variant="outline"
+            className={`${color} hover:${color} opacity-90 hover:opacity-80 text-white cursor-pointer`}
           >
             <Plus className="w-4 h-4 mr-2" />
             Т1етоха

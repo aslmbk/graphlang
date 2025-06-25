@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 type Response = {
   payload: string;
@@ -28,19 +27,12 @@ const defaultState: State = {
   responses: {},
 };
 
-export const state = create<State & Actions>()(
-  persist(
-    (set, get) => ({
-      ...defaultState,
-      setResponse: (name, response) => {
-        set({ responses: { ...get().responses, [name]: response } });
-      },
-      clearResponse: (name) => {
-        set({ responses: { ...get().responses, [name]: blankResponse } });
-      },
-    }),
-    {
-      name: "state",
-    }
-  )
-);
+export const state = create<State & Actions>()((set, get) => ({
+  ...defaultState,
+  setResponse: (name, response) => {
+    set({ responses: { ...get().responses, [name]: response } });
+  },
+  clearResponse: (name) => {
+    set({ responses: { ...get().responses, [name]: blankResponse } });
+  },
+}));
