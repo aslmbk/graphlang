@@ -16,7 +16,7 @@ export const ActorsResponses = ({ responses }: ActorsResponsesProps) => {
   return (
     <div className="mt-6 space-y-4">
       <h3 className="text-lg font-semibold text-foreground/80">
-        Ответы акторов
+        Акторийн жоьпаш
       </h3>
       <div className="grid gap-4">
         {Object.entries(responses).map(([actorName, response]) => (
@@ -55,19 +55,19 @@ const ActorResponseCard = ({ actorName, response }: ActorResponseCardProps) => {
         <h4 className="font-medium text-foreground">{actorName}</h4>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-xs">
-            {response.votes} голосов
+            {response.votes} кхаж
           </Badge>
           {response.chosen && (
             <Badge
               variant="default"
               className="bg-green-500 text-white text-xs"
             >
-              Выбран
+              Харжам
             </Badge>
           )}
           {response.generation && (
             <Badge variant="outline" className="text-xs animate-pulse">
-              Генерация...
+              Генераци еш...
             </Badge>
           )}
         </div>

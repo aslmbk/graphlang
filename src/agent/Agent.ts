@@ -81,10 +81,10 @@ export class Agent {
             (state.actorAttempts > 0 && this.graph.models[actor.name].error)
         );
 
-        const responses = await Promise.allSettled(
+        await Promise.allSettled(
           filteredModels.map(async (actor) => {
             const model = models[actor.name] as OpenAIActor;
-            let answer: any;
+            let stream: ReturnType<typeof model.streamGenerateResponse>;
             this.events.trigger("actor-generation", {
               name: actor.name,
               payload: true,
@@ -108,34 +108,29 @@ export class Agent {
               ${pros.join("\n")}
               Here is cons for the previous answer:
               ${cons.join("\n")}`;
-              answer = await model.regenerateResponse(prompt);
+              stream = model.streamRegenerateResponse(prompt);
             } else {
-              answer = await model.generateResponse(state.prompt);
+              stream = model.streamGenerateResponse(state.prompt);
+            }
+            for await (const chunk of stream) {
+              this.events.trigger("actor-response", {
+                name: actor.name,
+                payload: chunk.content,
+              });
+              if (chunk.isComplete) {
+                actorResponses[actor.name] =
+                  chunk.fullResponse.content.toString();
+                this.events.trigger("actor-generation", {
+                  name: actor.name,
+                  payload: false,
+                });
+              }
             }
             return {
               name: actor.name,
-              answer,
             };
           })
         );
-
-        responses.forEach((response) => {
-          if (response.status === "fulfilled") {
-            actorResponses[response.value.name] =
-              response.value.answer.content.toString();
-          }
-        });
-
-        Object.keys(actorResponses).forEach((name) => {
-          this.events.trigger("actor-response", {
-            name,
-            payload: actorResponses[name],
-          });
-          this.events.trigger("actor-generation", {
-            name,
-            payload: false,
-          });
-        });
 
         return {
           actorAttempts: state.actorAttempts + 1,
@@ -237,6 +232,7 @@ export class Agent {
       "regenerationNode",
       async (state) => {
         console.log("regeneration node", state);
+        this.events.trigger("regeneration");
         return {
           regeneration: true,
           actorAttempts: 0,

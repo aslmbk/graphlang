@@ -78,7 +78,7 @@ export const App = () => {
       if (!currentResponse) return;
       state.getState().setResponse(name, {
         ...currentResponse,
-        payload,
+        payload: currentResponse.payload + payload,
       });
     };
     const criticResponseCallback = ({ payload }: Payload<string>) => {
@@ -98,10 +98,12 @@ export const App = () => {
       });
     };
     const regenerationCallback = () => {
-      config.getState().actorModels.forEach((model) => {
-        const currentResponse = state.getState().responses[model.name];
-        state.getState().setResponse(model.name, {
-          ...currentResponse,
+      Object.keys(state.getState().responses).forEach((name) => {
+        state.getState().setResponse(name, {
+          ...state.getState().responses[name],
+          payload: "",
+          generation: true,
+          chosen: false,
           votes: 0,
         });
       });

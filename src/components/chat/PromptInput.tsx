@@ -17,7 +17,7 @@ export const PromptInput = ({
         htmlFor="prompt-input"
         className="block text-sm font-medium text-foreground mb-2"
       >
-        Промпт ала
+        Промпт язйе
       </label>
       <Input
         id="prompt-input"

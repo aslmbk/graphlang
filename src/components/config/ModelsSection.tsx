@@ -75,7 +75,7 @@ export const ModelsSection = ({
               .replace("500", "700")}`}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Добавить
+            Т1етоха
           </Button>
         </div>
       </CardHeader>
@@ -91,7 +91,7 @@ export const ModelsSection = ({
         {models.length === 0 && (
           <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-muted-foreground/20 rounded-lg">
             <Plus className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Нет добавленных {title.toLowerCase()}</p>
+            <p className="text-sm">Еса ю {title.toLowerCase()}</p>
           </div>
         )}
       </CardContent>

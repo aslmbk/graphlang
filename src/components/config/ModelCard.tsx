@@ -31,7 +31,7 @@ export const ModelCard = ({ model, onUpdate, onRemove }: ModelCardProps) => (
     <CardContent className="space-y-4 pt-6">
       <div>
         <label className="text-sm font-medium mb-2 block text-muted-foreground">
-          Модель
+          Модел
         </label>
         <Select
           value={model.model}
@@ -60,7 +60,7 @@ export const ModelCard = ({ model, onUpdate, onRemove }: ModelCardProps) => (
       <div>
         <div className="flex items-center justify-between mb-2">
           <label className="text-sm font-medium text-muted-foreground">
-            Температура
+            Йовхо
           </label>
           <span className="text-xs text-muted-foreground">
             {model.temperature}
@@ -74,13 +74,6 @@ export const ModelCard = ({ model, onUpdate, onRemove }: ModelCardProps) => (
           step={0.1}
           className="w-full"
         />
-        <div className="text-xs text-muted-foreground mt-1">
-          {model.temperature < 0.3
-            ? "Консервативный"
-            : model.temperature < 0.7
-            ? "Сбалансированный"
-            : "Креативный"}
-        </div>
       </div>
     </CardContent>
   </Card>
