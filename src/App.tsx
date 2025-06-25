@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Agent } from "./agent/Agent";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { Agent, type Payload } from "./agent/Agent";
 import { config } from "./lib/config";
 import { useStore } from "zustand";
 import { MainLayout } from "./components/layout/MainLayout";
@@ -12,6 +12,7 @@ export const App = () => {
     Record<string, boolean>
   >({});
   const configStore = useStore(config, (state) => state);
+  const responses = useStore(state, (state) => state.responses);
 
   const agentRef = useRef(new Agent());
 
@@ -60,55 +61,83 @@ export const App = () => {
   }, [configStore, clearResponses]);
 
   useEffect(() => {
-    const { responses, setResponse } = state.getState();
-    agentRef.current.events.on("actor-generation", ({ payload, name }) => {
-      const currentResponse = responses[name];
+    const agent = agentRef.current;
+    const actorGenerationCallback = ({ payload, name }: Payload<boolean>) => {
+      const currentResponse = state.getState().responses[name];
       if (!currentResponse) return;
-      setResponse(name, {
+      state.getState().setResponse(name, {
         ...currentResponse,
         generation: payload,
       });
-    });
-    agentRef.current.events.on("critic-generation", ({ payload, name }) => {
+    };
+    const criticGenerationCallback = ({ payload, name }: Payload<boolean>) => {
       setCriticsGeneration((prev) => ({ ...prev, [name]: payload }));
-    });
-    agentRef.current.events.on("actor-response", ({ payload, name }) => {
-      const currentResponse = responses[name];
+    };
+    const actorResponseCallback = ({ payload, name }: Payload<string>) => {
+      const currentResponse = state.getState().responses[name];
       if (!currentResponse) return;
-      setResponse(name, {
+      state.getState().setResponse(name, {
         ...currentResponse,
         payload,
       });
-    });
-    agentRef.current.events.on("critic-response", ({ payload }) => {
-      const currentResponse = responses[payload];
+    };
+    const criticResponseCallback = ({ payload }: Payload<string>) => {
+      const currentResponse = state.getState().responses[payload];
       if (!currentResponse) return;
-      setResponse(payload, {
+      state.getState().setResponse(payload, {
         ...currentResponse,
         votes: currentResponse.votes + 1,
       });
-    });
-    agentRef.current.events.on("choise", ({ name }) => {
-      const currentResponse = responses[name];
+    };
+    const choiseCallback = ({ name }: Payload<string>) => {
+      const currentResponse = state.getState().responses[name];
       if (!currentResponse) return;
-      setResponse(name, {
+      state.getState().setResponse(name, {
         ...currentResponse,
         chosen: true,
       });
-    });
+    };
+    const regenerationCallback = () => {
+      config.getState().actorModels.forEach((model) => {
+        const currentResponse = state.getState().responses[model.name];
+        state.getState().setResponse(model.name, {
+          ...currentResponse,
+          votes: 0,
+        });
+      });
+    };
+
+    agent.events.on("actor-generation", actorGenerationCallback);
+    agent.events.on("critic-generation", criticGenerationCallback);
+    agent.events.on("actor-response", actorResponseCallback);
+    agent.events.on("critic-response", criticResponseCallback);
+    agent.events.on("choise", choiseCallback);
+    agent.events.on("regeneration", regenerationCallback);
+
+    return () => {
+      agent.events.off("actor-generation", actorGenerationCallback);
+      agent.events.off("critic-generation", criticGenerationCallback);
+      agent.events.off("actor-response", actorResponseCallback);
+      agent.events.off("critic-response", criticResponseCallback);
+      agent.events.off("choise", choiseCallback);
+      agent.events.off("regeneration", regenerationCallback);
+    };
   }, []);
+
+  const isCriticsGeneration = useMemo(() => {
+    return Object.values(criticsGeneration).some((value) => value);
+  }, [criticsGeneration]);
 
   return (
     <MainLayout>
       <ChatContainer
         prompt={prompt}
-        response={null}
-        isLoading={false}
+        responses={responses}
+        isCriticsGeneration={isCriticsGeneration}
         onPromptChange={setPrompt}
         onKeyPress={handleKeyPress}
         onSubmit={handleSubmit}
         onClear={handleClear}
-        onCloseResponse={() => {}}
       />
     </MainLayout>
   );

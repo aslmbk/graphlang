@@ -1,30 +1,35 @@
 import { AgentConfig } from "../AgentConfig";
 import { PromptInput } from "./PromptInput";
 import { ActionButtons } from "./ActionButtons";
-import { LoadingIndicator } from "./LoadingIndicator";
-import { ResponseDisplay } from "./ResponseDisplay";
 import { HelpText } from "./HelpText";
+import { ActorsResponses } from "./ActorsResponses";
+import { CriticsGenerationIndicator } from "./CriticsGenerationIndicator";
+
+type Response = {
+  payload: string;
+  generation: boolean;
+  chosen: boolean;
+  votes: number;
+};
 
 interface ChatContainerProps {
   prompt: string;
-  response: string | null;
-  isLoading: boolean;
+  responses: Record<string, Response>;
+  isCriticsGeneration: boolean;
   onPromptChange: (value: string) => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
   onSubmit: () => void;
   onClear: () => void;
-  onCloseResponse: () => void;
 }
 
 export const ChatContainer = ({
   prompt,
-  response,
-  isLoading,
+  responses,
+  isCriticsGeneration,
   onPromptChange,
   onKeyPress,
   onSubmit,
   onClear,
-  onCloseResponse,
 }: ChatContainerProps) => {
   return (
     <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl shadow-2xl p-8">
@@ -43,17 +48,16 @@ export const ChatContainer = ({
       {/* Кнопки */}
       <ActionButtons
         prompt={prompt}
-        isLoading={isLoading}
+        isLoading={false}
         onSubmit={onSubmit}
         onClear={onClear}
       />
 
-      {/* Блок ответа */}
-      {isLoading && <LoadingIndicator />}
+      {/* Блок ответов акторов */}
+      <ActorsResponses responses={responses} />
 
-      {response && !isLoading && (
-        <ResponseDisplay response={response} onClose={onCloseResponse} />
-      )}
+      {/* Индикатор генерации критиков */}
+      {isCriticsGeneration && <CriticsGenerationIndicator />}
 
       {/* Дополнительная информация */}
       <HelpText />

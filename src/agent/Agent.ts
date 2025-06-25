@@ -63,6 +63,7 @@ export class Agent {
     "actor-generation": Payload<boolean>;
     "critic-generation": Payload<boolean>;
     choise: Payload<string>;
+    regeneration: void;
   }>();
 
   constructor() {
