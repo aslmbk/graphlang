@@ -5,6 +5,7 @@ import { Agent } from "./agent/Agent";
 import { AgentConfig } from "./components/AgentConfig";
 import { config } from "./lib/config";
 import { useStore } from "zustand";
+import { Zap, CheckCircle, X, Info } from "lucide-react";
 
 const agent = new Agent();
 
@@ -93,20 +94,7 @@ export const App = () => {
               disabled={!prompt.trim() || isLoading}
               className="flex-1 h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
+              <Zap className="w-5 h-5 mr-2" />
               {isLoading ? "Д1атухуш..." : "Д1атоха"}
             </Button>
 
@@ -136,20 +124,7 @@ export const App = () => {
             <div className="mt-6 p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <svg
-                    className="w-6 h-6 text-green-600 dark:text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="ml-3 flex-1">
                   <h3 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
@@ -163,20 +138,7 @@ export const App = () => {
                   onClick={() => setResponse(null)}
                   className="ml-3 flex-shrink-0 text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -185,20 +147,7 @@ export const App = () => {
           {/* Дополнительная информация */}
           <div className="mt-6 pt-6 border-t border-border/30">
             <div className="flex items-center justify-center text-sm text-muted-foreground">
-              <svg
-                className="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Info className="w-4 h-4 mr-2" />
               Enter т1е п1елг та1бан а мега иштта-м
             </div>
           </div>
