@@ -9,7 +9,7 @@ import {
 import { ModelCard } from "./ModelCard";
 import { Plus } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import type { ModelType } from "@/agent/Agent";
+import type { ModelType } from "@/graph/state/config";
 
 interface ModelsSectionProps {
   title: string;
