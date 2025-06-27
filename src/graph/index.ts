@@ -49,26 +49,13 @@ const getActorFeedback = (actorName: string) => {
   const pros: string[] = [];
   const cons: string[] = [];
 
-  Array.from(CriticModels.values()).forEach((critic) => {
-    const criticModel = CriticModels.get(critic.name)!;
-
-    // Пропускаем критиков с ошибками
-    if (criticModel.error || !criticModel.result) {
-      return;
-    }
-
-    // Добавляем pros для данного актора
+  Array.from(CriticModels.values()).forEach((criticModel) => {
+    if (criticModel.error || !criticModel.result) return;
     criticModel.result.pros.forEach(({ name, pro }) => {
-      if (name === actorName) {
-        pros.push(pro);
-      }
+      if (name === actorName) pros.push(pro);
     });
-
-    // Добавляем cons для данного актора
     criticModel.result.cons.forEach(({ name, con }) => {
-      if (name === actorName) {
-        cons.push(con);
-      }
+      if (name === actorName) cons.push(con);
     });
   });
 
