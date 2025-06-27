@@ -1,4 +1,4 @@
-import { Model } from "@/graph/Model";
+import { Model } from "@/graph/models/Model";
 import {
   BaseMessage,
   HumanMessage,

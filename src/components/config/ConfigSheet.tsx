@@ -12,8 +12,8 @@ import { Separator } from "../ui/separator";
 import { Settings } from "lucide-react";
 import { BasicSettingsSection } from "./BasicSettingsSection";
 import { ModelsSection } from "./ModelsSection";
-import { MODELS } from "@/agent/models/models";
-import type { ModelType } from "@/agent/Agent";
+import { MODELS } from "@/graph/models/models";
+import type { ModelType } from "@/graph/state/config";
 
 interface ConfigSheetProps {
   maxGenerationAttempts: number;

@@ -1,4 +1,4 @@
-import { Model } from "@/graph/Model";
+import { Model } from "@/graph/models/Model";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";

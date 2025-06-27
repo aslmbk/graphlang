@@ -1,20 +1,18 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Agent, type Payload } from "./agent/Agent";
-import { config } from "./lib/config";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { config } from "./graph/state/config";
 import { useStore } from "zustand";
 import { MainLayout } from "./components/layout/MainLayout";
 import { ChatContainer } from "./components/chat/ChatContainer";
 import { state } from "./lib/state";
+import type { Payload } from "./graph/state/state";
+import graph from "./graph";
 
 export const App = () => {
   const [prompt, setPrompt] = useState("");
   const [criticsGeneration, setCriticsGeneration] = useState<
     Record<string, boolean>
   >({});
-  const configStore = useStore(config, (state) => state);
   const responses = useStore(state, (state) => state.responses);
-
-  const agentRef = useRef(new Agent());
 
   const clearResponses = useCallback(() => {
     const actorModels = config.getState().actorModels;
@@ -37,7 +35,7 @@ export const App = () => {
 
   const handleSubmit = () => {
     if (prompt.trim()) {
-      agentRef.current.invoke(prompt).catch((error) => {
+      graph.invoke(prompt).catch((error) => {
         console.error("Error:", error);
       });
       handleClear();
@@ -52,18 +50,6 @@ export const App = () => {
   };
 
   useEffect(() => {
-    agentRef.current.setMaxGenerationAttempts(
-      configStore.maxGenerationAttempts
-    );
-    agentRef.current.setChoiseThreshold(configStore.choiseThreshold);
-    agentRef.current.setActorModels(configStore.actorModels);
-    agentRef.current.setCriticModels(configStore.criticModels);
-
-    clearResponses();
-  }, [configStore, clearResponses]);
-
-  useEffect(() => {
-    const agent = agentRef.current;
     const actorGenerationCallback = ({ payload, name }: Payload<boolean>) => {
       const currentResponse = state.getState().responses[name];
       if (!currentResponse) return;
@@ -111,29 +97,32 @@ export const App = () => {
       });
     };
 
-    agent.events.on("actor-generation", actorGenerationCallback);
-    agent.events.on("critic-generation", criticGenerationCallback);
-    agent.events.on("actor-response", actorResponseCallback);
-    agent.events.on("critic-response", criticResponseCallback);
-    agent.events.on("choise", choiseCallback);
-    agent.events.on("regeneration", regenerationCallback);
+    graph.events.on("actor-generation", actorGenerationCallback);
+    graph.events.on("critic-generation", criticGenerationCallback);
+    graph.events.on("actor-response", actorResponseCallback);
+    graph.events.on("critic-response", criticResponseCallback);
+    graph.events.on("choise", choiseCallback);
+    graph.events.on("regeneration", regenerationCallback);
+
+    config.subscribe(clearResponses);
+    config.setState({});
 
     return () => {
-      agent.events.off("actor-generation", actorGenerationCallback);
-      agent.events.off("critic-generation", criticGenerationCallback);
-      agent.events.off("actor-response", actorResponseCallback);
-      agent.events.off("critic-response", criticResponseCallback);
-      agent.events.off("choise", choiseCallback);
-      agent.events.off("regeneration", regenerationCallback);
+      graph.events.off("actor-generation", actorGenerationCallback);
+      graph.events.off("critic-generation", criticGenerationCallback);
+      graph.events.off("actor-response", actorResponseCallback);
+      graph.events.off("critic-response", criticResponseCallback);
+      graph.events.off("choise", choiseCallback);
+      graph.events.off("regeneration", regenerationCallback);
     };
-  }, []);
+  }, [clearResponses]);
 
   const isCriticsGeneration = useMemo(() => {
     return Object.values(criticsGeneration).some((value) => value);
   }, [criticsGeneration]);
 
   const handleGetFeedback = useCallback((actorName: string) => {
-    return agentRef.current.getActorFeedback(actorName);
+    return graph.getActorFeedback(actorName);
   }, []);
 
   return (

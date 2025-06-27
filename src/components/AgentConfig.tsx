@@ -1,5 +1,5 @@
 import { useStore } from "zustand";
-import { config } from "../lib/config";
+import { config } from "../graph/state/config";
 import { ConfigSheet } from "./config/ConfigSheet";
 
 export const AgentConfig = () => {

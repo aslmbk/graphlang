@@ -1,8 +1,17 @@
-import { MODELS } from "@/agent/models/models";
-import type { ModelType } from "../agent/Agent";
+import { MODELS } from "@/graph/models/models";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
+import { ActorModels, CriticModels } from "./state";
+import { OpenAIActor } from "../models/OpenAIActor";
+import { ChatOpenAI } from "@langchain/openai";
+import { OpenAICritic } from "../models/OpenAICritic";
+
+export type ModelType = {
+  name: string;
+  model: string;
+  temperature: number;
+};
 
 type State = {
   choiseThreshold: number;
@@ -63,7 +72,44 @@ export const config = create<State & Actions>()(
       setCriticModels: (criticModels: ModelType[]) => set({ criticModels }),
     }),
     {
-      name: "config2",
+      name: "config3",
     }
   )
 );
+
+config.subscribe((state) => {
+  ActorModels.clear();
+  CriticModels.clear();
+  state.actorModels.forEach(({ name, model, temperature }) => {
+    ActorModels.set(
+      name,
+      new OpenAIActor({
+        name,
+        model: new ChatOpenAI({
+          model,
+          temperature,
+          openAIApiKey: import.meta.env.VITE_API_KEY,
+          configuration: {
+            baseURL: import.meta.env.VITE_API_URL,
+          },
+        }),
+      })
+    );
+  });
+  state.criticModels.forEach(({ name, model, temperature }) => {
+    CriticModels.set(
+      name,
+      new OpenAICritic({
+        name,
+        model: new ChatOpenAI({
+          model,
+          temperature,
+          openAIApiKey: import.meta.env.VITE_API_KEY,
+          configuration: {
+            baseURL: import.meta.env.VITE_API_URL,
+          },
+        }),
+      })
+    );
+  });
+});

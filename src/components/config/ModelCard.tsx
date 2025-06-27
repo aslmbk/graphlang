@@ -8,9 +8,9 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Card, CardContent } from "../ui/card";
-import { MODELS } from "@/agent/models/models";
+import { MODELS } from "@/graph/models/models";
 import { X } from "lucide-react";
-import type { ModelType } from "@/agent/Agent";
+import type { ModelType } from "@/graph/state/config";
 
 interface ModelCardProps {
   model: ModelType;
