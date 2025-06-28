@@ -43,6 +43,7 @@ export const StateAnnotation = Annotation.Root({
 export const ActorModels = new Map<string, OpenAIActor>();
 export const CriticModels = new Map<string, OpenAICritic>();
 export const GraphEvents = new Events<{
+  "start-generation": void;
   "actor-response": Payload<string>;
   "critic-response": Payload<string>;
   "actor-generation": Payload<boolean>;

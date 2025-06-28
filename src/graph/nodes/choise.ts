@@ -22,7 +22,9 @@ export const node = async (state: typeof StateAnnotation.State) => {
     if (choise) choises[choise]++;
   });
   const maxChoise = Math.max(...Object.values(choises));
-  const nonErrorCritics = criticModelsArray.filter((critic) => !critic.error);
+  const nonErrorCritics = criticModelsArray.filter(
+    (critic) => !critic.error && critic.result
+  );
   const maxChoiseInPercent = (maxChoise / nonErrorCritics.length) * 100;
   if (maxChoiseInPercent < config.getState().choiseThreshold)
     return { choise: null };

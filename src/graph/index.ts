@@ -63,6 +63,7 @@ const getActorFeedback = (actorName: string) => {
 };
 
 const invoke = (prompt: string) => {
+  GraphEvents.trigger("start-generation");
   return compiledWorkflow.invoke(
     {
       prompt,

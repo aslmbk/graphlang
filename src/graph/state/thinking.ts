@@ -42,11 +42,13 @@ type Actions = {
     }>
   ) => void;
   setChoise: (params: Payload<string>) => void;
+  clearState: () => void;
 };
 
 export const thinking = create<Store & Actions>((set) => ({
   iterations: [],
   choise: null,
+  clearState: () => set({ iterations: [], choise: null }),
   addIteration: () =>
     set((state) => ({
       iterations: [...state.iterations, { options: {}, evaluations: {} }],
@@ -101,6 +103,9 @@ export const thinking = create<Store & Actions>((set) => ({
   setChoise: ({ name }) => set({ choise: name }),
 }));
 
+GraphEvents.on("start-generation", () => {
+  thinking.getState().clearState();
+});
 GraphEvents.on("actors-node", () => {
   thinking.getState().addIteration();
 });
