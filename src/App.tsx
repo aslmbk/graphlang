@@ -102,7 +102,7 @@ export const App = () => {
     graph.events.on("actor-response", actorResponseCallback);
     graph.events.on("critic-response", criticResponseCallback);
     graph.events.on("choise", choiseCallback);
-    graph.events.on("regeneration", regenerationCallback);
+    graph.events.on("regeneration-node", regenerationCallback);
 
     config.subscribe(clearResponses);
     config.setState({});
@@ -113,7 +113,7 @@ export const App = () => {
       graph.events.off("actor-response", actorResponseCallback);
       graph.events.off("critic-response", criticResponseCallback);
       graph.events.off("choise", choiseCallback);
-      graph.events.off("regeneration", regenerationCallback);
+      graph.events.off("regeneration-node", regenerationCallback);
     };
   }, [clearResponses]);
 

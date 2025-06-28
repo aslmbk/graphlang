@@ -8,8 +8,7 @@ import {
 } from "../ui/card";
 import { ModelCard } from "./ModelCard";
 import { Plus } from "lucide-react";
-import { v4 as uuidv4 } from "uuid";
-import type { ModelType } from "@/graph/state/config";
+import { createModelObject, type ModelType } from "@/graph/state/config";
 
 interface ModelsSectionProps {
   title: string;
@@ -31,14 +30,7 @@ export const ModelsSection = ({
   bgGradient,
 }: ModelsSectionProps) => {
   const handleAddModel = () => {
-    onModelsChange([
-      ...models,
-      {
-        name: uuidv4(),
-        model: defaultModel,
-        temperature: 0.5,
-      },
-    ]);
+    onModelsChange([...models, createModelObject(defaultModel, 0.5)]);
   };
 
   const handleUpdateModel = (

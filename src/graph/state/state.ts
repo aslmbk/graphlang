@@ -5,6 +5,7 @@ import { Events } from "@/lib/Events";
 
 export type Payload<T> = {
   name: string;
+  model: string;
   payload: T;
 };
 
@@ -47,5 +48,8 @@ export const GraphEvents = new Events<{
   "actor-generation": Payload<boolean>;
   "critic-generation": Payload<boolean>;
   choise: Payload<string>;
-  regeneration: void;
+  "actors-node": void;
+  "critics-node": void;
+  "choise-node": void;
+  "regeneration-node": void;
 }>();

@@ -7,6 +7,7 @@ import {
 
 export const node = async (state: typeof StateAnnotation.State) => {
   console.log("critics node", state);
+  GraphEvents.trigger("critics-node");
   const criticResponses = { ...state.criticResponses };
   const criticModelsArray = Array.from(CriticModels.values());
 
@@ -25,39 +26,28 @@ export const node = async (state: typeof StateAnnotation.State) => {
       state.criticAttempts === 0 || (state.criticAttempts > 0 && critic.error)
   );
 
-  const responses = await Promise.allSettled(
+  await Promise.allSettled(
     filteredModels.map(async (critic) => {
       const model = CriticModels.get(critic.name)!;
       GraphEvents.trigger("critic-generation", {
         name: critic.name,
+        model: critic.modelName,
         payload: true,
       });
       const answer = await model.generateResponse(state.prompt, actorResponses);
-      return {
+      criticResponses[critic.name] = answer.content;
+      GraphEvents.trigger("critic-response", {
         name: critic.name,
-        answer,
-      };
+        model: critic.modelName,
+        payload: critic.result?.choice ?? "",
+      });
+      GraphEvents.trigger("critic-generation", {
+        name: critic.name,
+        model: critic.modelName,
+        payload: false,
+      });
     })
   );
-
-  responses.forEach((response) => {
-    if (response.status === "fulfilled") {
-      criticResponses[response.value.name] = response.value.answer.content;
-
-      const criticModel = CriticModels.get(response.value.name)!;
-      GraphEvents.trigger("critic-response", {
-        name: response.value.name,
-        payload: criticModel.result?.choice ?? "",
-      });
-    }
-  });
-
-  Object.keys(criticResponses).forEach((name) => {
-    GraphEvents.trigger("critic-generation", {
-      name,
-      payload: false,
-    });
-  });
 
   return {
     criticAttempts: state.criticAttempts + 1,

@@ -2,7 +2,6 @@ import { Model } from "@/graph/models/Model";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { Runnable, RunnableSequence } from "@langchain/core/runnables";
 import {
   ChatPromptTemplate,
@@ -11,10 +10,12 @@ import {
 import { formatToOpenAIToolMessages } from "langchain/agents/format_scratchpad/openai_tools";
 import { OpenAIToolsAgentOutputParser } from "langchain/agents/openai/output_parser";
 import { AgentExecutor } from "langchain/agents";
+import { ChatOpenAI } from "@langchain/openai";
 
 type OpenAICriticParams = {
   name: string;
-  model: BaseChatModel;
+  model: ChatOpenAI;
+  modelName: string;
 };
 
 const toolSchema = z.object({
@@ -39,12 +40,14 @@ const toolSchema = z.object({
 
 export class OpenAICritic extends Model {
   protected model: Runnable;
+  public modelName: string;
 
   private _error: boolean = false;
   public result: z.infer<typeof toolSchema> | null = null;
 
   constructor(params: OpenAICriticParams) {
     super(params);
+    this.modelName = params.modelName;
     const tools = [this.getTool()];
 
     const prompt = ChatPromptTemplate.fromMessages([
@@ -69,7 +72,7 @@ Pros for modelName2: It is easy to debug.
       new MessagesPlaceholder("agent_scratchpad"),
     ]);
 
-    const llmWithTools = params.model.bindTools!(tools);
+    const llmWithTools = params.model.bindTools(tools);
 
     const runnableAgent = RunnableSequence.from([
       {

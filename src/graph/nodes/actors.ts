@@ -7,6 +7,7 @@ import {
 
 export const node = async (state: typeof StateAnnotation.State) => {
   console.log("actors node", state);
+  GraphEvents.trigger("actors-node");
   const actorResponses = { ...state.actorResponses };
   const actorModelsArray = Array.from(ActorModels.values());
   const criticModelsArray = Array.from(CriticModels.values());
@@ -22,6 +23,7 @@ export const node = async (state: typeof StateAnnotation.State) => {
       let stream: ReturnType<typeof model.streamGenerateResponse>;
       GraphEvents.trigger("actor-generation", {
         name: actor.name,
+        model: actor.modelName,
         payload: true,
       });
       if (state.regeneration) {
@@ -47,29 +49,27 @@ export const node = async (state: typeof StateAnnotation.State) => {
         stream = model.streamGenerateResponse(state.prompt);
       }
       for await (const chunk of stream) {
-        if (!model.error) {
-          GraphEvents.trigger("actor-response", {
-            name: actor.name,
-            payload: chunk.content,
-          });
-        }
+        GraphEvents.trigger("actor-response", {
+          name: actor.name,
+          model: actor.modelName,
+          payload: chunk.content,
+        });
         if (chunk.isComplete) {
           if (model.error) {
             GraphEvents.trigger("actor-response", {
               name: actor.name,
+              model: actor.modelName,
               payload: "Error generating response",
             });
           }
           actorResponses[actor.name] = chunk.fullResponse.content.toString();
           GraphEvents.trigger("actor-generation", {
             name: actor.name,
+            model: actor.modelName,
             payload: false,
           });
         }
       }
-      return {
-        name: actor.name,
-      };
     })
   );
 

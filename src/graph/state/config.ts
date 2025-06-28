@@ -27,37 +27,23 @@ type Actions = {
   setCriticModels: (criticModels: ModelType[]) => void;
 };
 
+export const createModelObject = (model: string, temperature: number) => ({
+  name: uuidv4(),
+  model,
+  temperature,
+});
+
 const defaultState: State = {
   choiseThreshold: 51,
   maxGenerationAttempts: 3,
   actorModels: [
-    {
-      name: uuidv4(),
-      model: MODELS.xai.grok_3,
-      temperature: 0.2,
-    },
-    {
-      name: uuidv4(),
-      model: MODELS.openai.gpt_4o,
-      temperature: 0.5,
-    },
-    {
-      name: uuidv4(),
-      model: MODELS.google.gemini_2_5_flash,
-      temperature: 0.8,
-    },
+    createModelObject(MODELS.xai.grok_3, 0.2),
+    createModelObject(MODELS.openai.gpt_4o, 0.5),
+    createModelObject(MODELS.google.gemini_2_5_flash, 0.8),
   ],
   criticModels: [
-    {
-      name: uuidv4(),
-      model: MODELS.deepseek.deepseek_chat_v3_0324,
-      temperature: 0.2,
-    },
-    {
-      name: uuidv4(),
-      model: MODELS.anthropic.claude_3_7_sonnet,
-      temperature: 0.5,
-    },
+    createModelObject(MODELS.deepseek.deepseek_chat_v3_0324, 0.2),
+    createModelObject(MODELS.anthropic.claude_3_7_sonnet, 0.5),
   ],
 };
 
@@ -85,6 +71,7 @@ config.subscribe((state) => {
       name,
       new OpenAIActor({
         name,
+        modelName: model,
         model: new ChatOpenAI({
           model,
           temperature,
@@ -101,6 +88,7 @@ config.subscribe((state) => {
       name,
       new OpenAICritic({
         name,
+        modelName: model,
         model: new ChatOpenAI({
           model,
           temperature,

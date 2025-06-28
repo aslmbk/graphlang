@@ -8,6 +8,7 @@ import { config } from "@/graph/state/config";
 
 export const node = async (state: typeof StateAnnotation.State) => {
   console.log("choise node", state);
+  GraphEvents.trigger("choise-node");
   const actorModelsArray = Array.from(ActorModels.values());
   const criticModelsArray = Array.from(CriticModels.values());
   const choises: Record<string, number> = {};
@@ -30,6 +31,7 @@ export const node = async (state: typeof StateAnnotation.State) => {
   )!;
   GraphEvents.trigger("choise", {
     name: chosenActor,
+    model: ActorModels.get(chosenActor)!.modelName,
     payload: state.actorResponses[chosenActor],
   });
   return {

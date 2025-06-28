@@ -11,10 +11,12 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 type OpenAIActorParams = {
   name: string;
   model: Runnable;
+  modelName: string;
 };
 
 export class OpenAIActor extends Model {
   protected model: Runnable;
+  public modelName: string;
   private history: BaseMessage[] = [];
 
   private _error: boolean = false;
@@ -22,6 +24,7 @@ export class OpenAIActor extends Model {
   constructor(params: OpenAIActorParams) {
     super(params);
     this.model = params.model;
+    this.modelName = params.modelName;
   }
 
   public async call(prompt: string) {

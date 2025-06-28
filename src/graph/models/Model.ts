@@ -6,6 +6,7 @@ export abstract class Model {
   public name: string;
   public id = uuidv4();
   protected abstract model: Runnable;
+  public abstract modelName: string;
 
   constructor(params: { name: string }) {
     this.name = params.name;
