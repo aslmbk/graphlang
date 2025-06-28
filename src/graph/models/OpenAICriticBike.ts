@@ -8,6 +8,7 @@ import type { BaseChatModel } from "@langchain/core/language_models/chat_models"
 type OpenAICriticParams = {
   name: string;
   model: BaseChatModel;
+  modelName: string;
 };
 
 const toolSchema = z.object({
@@ -32,13 +33,14 @@ const toolSchema = z.object({
 
 export class OpenAICritic extends Model {
   protected model: Runnable;
-
+  public modelName: string;
   private _error: boolean = false;
   public result: z.infer<typeof toolSchema> | null = null;
   private tools: DynamicStructuredTool[];
 
   constructor(params: OpenAICriticParams) {
     super(params);
+    this.modelName = params.modelName;
     this.tools = [this.getTool()];
     this.model = params.model.bindTools!(this.tools);
   }
