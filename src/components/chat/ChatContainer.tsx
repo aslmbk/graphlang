@@ -4,22 +4,12 @@ import { ActionButtons } from "./ActionButtons";
 import { HelpText } from "./HelpText";
 import { ActorsResponses } from "./ActorsResponses";
 
-type Response = {
-  payload: string;
-  generation: boolean;
-  chosen: boolean;
-  votes: number;
-};
-
 interface ChatContainerProps {
   prompt: string;
-  responses: Record<string, Response>;
-  isCriticsGeneration: boolean;
   onPromptChange: (value: string) => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
   onSubmit: () => void;
   onClear: () => void;
-  onGetFeedback: (actorName: string) => { pros: string[]; cons: string[] };
 }
 
 export const ChatContainer = ({
@@ -53,6 +43,7 @@ export const ChatContainer = ({
 
       {/* Actor responses block */}
       <ActorsResponses />
+
       {/* Additional information */}
       <HelpText />
     </div>
