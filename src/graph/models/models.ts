@@ -1,7 +1,7 @@
 export const MODELS = {
   openai: {
     gpt_3_5_turbo: "openai/gpt-3.5-turbo",
-    gpt_4o: "openai/chatgpt-4o-latest",
+    gpt_4o: "openai/gpt-4o",
     o1: "openai/o1",
     gpt_4_1: "openai/gpt-4.1",
   },

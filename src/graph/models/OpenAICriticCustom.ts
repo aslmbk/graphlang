@@ -2,12 +2,14 @@ import { Model } from "@/graph/models/Model";
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { Runnable } from "@langchain/core/runnables";
+import { Runnable, RunnableSequence } from "@langchain/core/runnables";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
-import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+import { formatToOpenAIToolMessages } from "langchain/agents/format_scratchpad/openai_tools";
+import { OpenAIToolsAgentOutputParser } from "langchain/agents/openai/output_parser";
+import { AgentExecutor } from "langchain/agents";
 import { ChatOpenAI } from "@langchain/openai";
 
 type OpenAICriticParams = {
@@ -37,7 +39,7 @@ const toolSchema = z.object({
 });
 
 export class OpenAICritic extends Model {
-  protected model!: Runnable;
+  protected model: Runnable;
   public modelName: string;
 
   private _error: boolean = false;
@@ -70,15 +72,21 @@ Pros for modelName2: It is easy to debug.
       new MessagesPlaceholder("agent_scratchpad"),
     ]);
 
-    createOpenAIToolsAgent({
-      llm: params.model,
-      tools,
+    const llmWithTools = params.model.bindTools(tools);
+
+    const runnableAgent = RunnableSequence.from([
+      {
+        input: (i) => i.input,
+        agent_scratchpad: (i) => formatToOpenAIToolMessages(i.steps),
+      },
       prompt,
-    }).then((agent) => {
-      this.model = new AgentExecutor({
-        agent,
-        tools,
-      });
+      llmWithTools,
+      new OpenAIToolsAgentOutputParser(),
+    ]).withConfig({ runName: "OpenAIToolsAgent" });
+
+    this.model = AgentExecutor.fromAgentAndTools({
+      agent: runnableAgent,
+      tools,
     });
   }
 
