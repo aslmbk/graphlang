@@ -62,7 +62,7 @@ export const node = async (state: typeof StateAnnotation.State) => {
               payload: "Error generating response",
             });
           }
-          actorResponses[actor.name] = chunk.fullResponse.content.toString();
+          actorResponses[actor.name] = chunk.fullResponse!.content.toString();
           GraphEvents.trigger("actor-generation", {
             name: actor.name,
             model: actor.modelName,

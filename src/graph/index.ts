@@ -1,83 +1,8 @@
-import { START, END, StateGraph } from "@langchain/langgraph/web";
-import {
-  ActorModels,
-  CriticModels,
-  GraphEvents,
-  StateAnnotation,
-} from "./state/state";
-import { node as actorsNode } from "./nodes/actors";
-import { node as criticsNode } from "./nodes/critics";
-import { node as choiseNode } from "./nodes/choise";
-import { node as regenerationNode } from "./nodes/regeneration";
-import { config } from "./state/config";
+import { fal } from "@fal-ai/client";
+import textGen from "./text-graph";
 
-const workflow = new StateGraph(StateAnnotation)
-  .addNode("actors_node", actorsNode)
-  .addNode("critics_node", criticsNode)
-  .addNode("choise_node", choiseNode)
-  .addNode("regeneration_node", regenerationNode)
-  .addEdge(START, "actors_node")
-  .addConditionalEdges("actors_node", (state) => {
-    if (
-      state.actorAttempts < config.getState().maxGenerationAttempts &&
-      Array.from(ActorModels.values()).some(({ error }) => error)
-    ) {
-      return "actors_node";
-    }
-    return "critics_node";
-  })
-  .addConditionalEdges("critics_node", (state) => {
-    if (
-      state.criticAttempts < config.getState().maxGenerationAttempts &&
-      Array.from(CriticModels.values()).some(({ error }) => error)
-    ) {
-      return "critics_node";
-    }
-    return "choise_node";
-  })
-  .addConditionalEdges("choise_node", (state) => {
-    if (state.choise === null) {
-      return "regeneration_node";
-    }
-    return END;
-  })
-  .addEdge("regeneration_node", "actors_node");
+fal.config({
+  credentials: import.meta.env.VITE_FAL_KEY,
+});
 
-const compiledWorkflow = workflow.compile();
-
-const getActorFeedback = (actorName: string) => {
-  const pros: string[] = [];
-  const cons: string[] = [];
-
-  Array.from(CriticModels.values()).forEach((criticModel) => {
-    if (criticModel.error || !criticModel.result) return;
-    criticModel.result.pros.forEach(({ name, pro }) => {
-      if (name === actorName) pros.push(pro);
-    });
-    criticModel.result.cons.forEach(({ name, con }) => {
-      if (name === actorName) cons.push(con);
-    });
-  });
-
-  return { pros, cons };
-};
-
-const invoke = (prompt: string) => {
-  GraphEvents.trigger("start-generation");
-  return compiledWorkflow.invoke(
-    {
-      prompt,
-      choise: null,
-      actorAttempts: 0,
-      criticAttempts: 0,
-      actorResponses: {},
-      criticResponses: {},
-      regeneration: false,
-    },
-    {
-      recursionLimit: 1000,
-    }
-  );
-};
-
-export default { invoke, getActorFeedback, events: GraphEvents };
+export { textGen };

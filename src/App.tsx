@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { config } from "./graph/state/config";
 import { MainLayout } from "./components/layout/MainLayout";
 import { ChatContainer } from "./components/chat/ChatContainer";
-import graph from "./graph";
+import { textGen } from "./graph";
 
 export const App = () => {
   const [prompt, setPrompt] = useState("");
@@ -13,7 +13,7 @@ export const App = () => {
 
   const handleSubmit = () => {
     if (prompt.trim()) {
-      graph.invoke(prompt).catch((error) => {
+      textGen.invoke(prompt).catch((error) => {
         console.error("Error:", error);
       });
       handleClear();
